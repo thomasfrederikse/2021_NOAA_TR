@@ -5,7 +5,7 @@ gmt set MAP_ANNOT_OFFSET=3p
 gmt set MAP_FRAME_WIDTH=0.06c
 gmt set MAP_TICK_LENGTH_PRIMARY=0.06c
 gmt set MAP_GRID_PEN_PRIMARY=default,lightgrey
-gmt set MAP_TITLE_OFFSET=0.05c
+gmt set MAP_TITLE_OFFSET=0.1c
 gmt set MAP_FRAME_PEN=0.5p,40/40/40
 gmt set FONT_ANNOT_PRIMARY             = 8p,Hind-Light,40/40/40
 gmt set FONT_ANNOT_SECONDARY           = 8p,Hind-Light,40/40/40
@@ -16,10 +16,10 @@ gmt set PS_PAGE_ORIENTATION=portrait
 gmt set PS_LINE_CAP=butt
 gmt set PS_LINE_JOIN=round
 
-R=1970/2070/-10/125
+R=1970/2050/-0.1/0.7
 J=X7c/4.5c
-Bx=x30g30
-By=y20g20
+Bx=x20g20
+By=y0.1g0.1
 color0=60/60/60
 color1=#4e79a7
 color2=#f28e2b
@@ -38,14 +38,14 @@ colorint=#bb3755
 colorinthigh=#ed6925
 colorhigh=#fcb519
 
-gmt psbasemap -K -R$R -J$J -Y2.1c -X0.9c -BWeSn+t'Global average' -B$Bx -B$By+l'Sea level (cm)'  > $ps
+gmt psbasemap -K -R$R -J$J -Y2.1c -X1.0c -BWeSn+t'Global average' -B$Bx -B$By+l'Sea level (m)'  > $ps
 gmt psxy  -R -J -L+bD -t50 -N -G$color0 -O -K GMSL_20c.txt >> $ps
 gmt psxy  -R -J -L+bD -t50 -N -G$color5 -O -K GMSL_Trajectory.txt >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorlow -O -K GMSL_Low.txt   >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorintlow -O -K GMSL_IntLow.txt   >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorint -O -K GMSL_Int.txt   >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorinthigh -O -K GMSL_IntHigh.txt   >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorhigh -O -K GMSL_High.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorlow -O -K GMSL_Low.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorintlow -O -K GMSL_IntLow.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorint -O -K GMSL_Int.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorinthigh -O -K GMSL_IntHigh.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorhigh -O -K GMSL_High.txt   >> $ps
 
 gmt psxy  -R -J -N -W1.0p,$colorlow -O -K GMSL_Low.txt   >> $ps
 gmt psxy  -R -J -N -W1.0p,$colorintlow -O -K GMSL_IntLow.txt   >> $ps
@@ -58,11 +58,11 @@ gmt psxy  -R -J -N -W1.5p,$color1 -O -K GMSL_Altimetry.txt   >> $ps
 
 gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Contiguous United States' -B$Bx -B$By  >> $ps
 gmt psxy  -R -J -L+bD -t50 -N -G$color5 -O -K USA_Trajectory.txt >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorlow -O -K USA_Low.txt   >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorintlow -O -K USA_IntLow.txt   >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorint -O -K USA_Int.txt   >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorinthigh -O -K USA_IntHigh.txt   >> $ps
-gmt psxy  -R -J -L+bD -t90 -N -G$colorhigh -O -K USA_High.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorlow -O -K USA_Low.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorintlow -O -K USA_IntLow.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorint -O -K USA_Int.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorinthigh -O -K USA_IntHigh.txt   >> $ps
+gmt psxy  -R -J -L+bD -t80 -N -G$colorhigh -O -K USA_High.txt   >> $ps
 
 gmt psxy  -R -J -N -W1.0p,$colorlow -O -K USA_Low.txt   >> $ps
 gmt psxy  -R -J -N -W1.0p,$colorintlow -O -K USA_IntLow.txt   >> $ps

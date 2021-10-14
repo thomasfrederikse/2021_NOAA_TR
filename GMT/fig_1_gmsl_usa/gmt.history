@@ -1,6 +1,6 @@
 # GMT 6 Session common arguments shelf
 BEGIN GMT 6.3.0
-B	weSn+tContiguous United Statesx30g30y20g20
+B	weSn+tContiguous United Statesx20g20y0.1g0.1
 J	X
 JX	X6.8c/1.5c
 R	0/0.85/0.5/5.5

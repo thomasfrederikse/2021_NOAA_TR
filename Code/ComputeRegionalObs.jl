@@ -21,6 +21,7 @@ function RunComputeRegionalObs(settings)
     RemoveClimVar!(region_data,settings)
     ReadAltimetry!(region_data,settings)
     SaveData(region_data,settings)
+    SaveGridGMT(region_data, settings)
     println("Regional observations done")
     return nothing
 end
@@ -94,12 +95,32 @@ function MapToRegions(tg_annual,settings)
     # Find out which tide gauges belong to the regions
     mask = Masks.ReadMask(settings)
     region_num = zeros(Bool,length(settings["regions"]),size(tg_annual["station_coords"],1))
+    
+    # Alaska stations
+    in_alaska = zeros(Bool,size(tg_annual["station_coords"],1))
+    for stat ∈ 1:size(tg_annual["station_coords"],1)
+        strip(tg_annual["station_names"][stat][end-2:end]) == "AK" ? in_alaska[stat] = true : nothing
+    end
+    ALN_list = ["Unalaska, AK","Prudhoe Bay, AK","Nome, AK","Adak Island, AK ","Unalaska, AK"]
+
     for (region_idx,region) ∈ enumerate(settings["regions"])
-         for stat ∈ 1:size(tg_annual["station_coords"],1)
-            ϕ_idx = argmin(@. abs(tg_annual["station_coords"][stat,1] - mask["ϕ"]))
-            θ_idx = argmin(@. abs(tg_annual["station_coords"][stat,2] - mask["θ"]))
-            if mask[region*"_unc"][ϕ_idx,θ_idx]
-                region_num[region_idx,stat] = true
+        if (region!="ALN") & (region!="ALS")
+            for stat ∈ 1:size(tg_annual["station_coords"],1)
+                ϕ_idx = argmin(@. abs(tg_annual["station_coords"][stat,1] - mask["ϕ"]))
+                θ_idx = argmin(@. abs(tg_annual["station_coords"][stat,2] - mask["θ"]))
+                if mask[region*"_unc"][ϕ_idx,θ_idx]
+                    region_num[region_idx,stat] = true
+                end
+            end
+        elseif region=="ALN"
+            for stat ∈ 1:size(tg_annual["station_coords"],1)
+                tg_annual["station_names"][stat] in ALN_list ? region_num[region_idx,stat] = true : nothing
+            end
+        elseif region=="ALS"
+            for stat ∈ 1:size(tg_annual["station_coords"],1)
+                if in_alaska[stat] & !region_num[region_idx-1,stat]
+                    region_num[region_idx,stat] = true
+                end
             end
         end
     end
@@ -289,6 +310,26 @@ function SaveData(region_data,settings)
         defVar(fh,region*"_gsl_alt",Float32,("years",),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,region_data["alt_year"] )),region_data[region]["gsl_alt"],extrapolation_bc=NaN32)(settings["years"])
     end
     close(fh)
+    return nothing
+end
+
+function SaveGridGMT(region_data, settings)
+    for region ∈ settings["regions"]     
+        writedlm(settings["dir_fig_3_map"]*region*".txt",region_data[region]["station_coords"],";")
+    end
+    mask = Masks.ReadMask(settings) 
+    mask_num = zeros(Int16,size(mask["EC"]))
+    mask_num[mask["EC"]] .= 1
+    mask_num[mask["SE"]] .= 2
+    mask_num[mask["GCE"]] .= 3
+    mask_num[mask["GCW"]] .= 4
+    mask_num[mask["SWC"]] .= 5
+    mask_num[mask["NWC"]] .= 6
+    mask_num[mask["PAC"]] .= 7
+    mask_num[mask["CAR"]] .= 8
+    mask_num[mask["ALN"]] .= 9
+    mask_num[mask["ALS"]] .= 10
+
     return nothing
 end
 

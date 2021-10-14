@@ -1,0 +1,17 @@
+# GMT 6 Session common arguments shelf
+BEGIN GMT 6.3.0
+B	WeSny20f10x30f15
+J	J
+JA	A235/40/6c
+JC	C235/40/6c
+JJ	J180/7c
+JN	N180/6c
+JQ	Q180/6c
+JS	S235/40/6c
+JT	T235/40/6c
+JU	U12/6c
+R	170/310/5/75
+X	0.7c
+Y	1c
+@L	12
+END

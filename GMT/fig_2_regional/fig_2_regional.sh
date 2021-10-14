@@ -1,5 +1,5 @@
 ps=fig_2_regional.ps
-gmt set PS_MEDIA=Custom_16.0cx20.2c
+gmt set PS_MEDIA=Custom_16.0cx19.5c
 gmt set MAP_LABEL_OFFSET=3p
 gmt set MAP_ANNOT_OFFSET=3p
 gmt set MAP_FRAME_WIDTH=0.06c
@@ -16,10 +16,10 @@ gmt set PS_PAGE_ORIENTATION=portrait
 gmt set PS_LINE_CAP=butt
 gmt set PS_LINE_JOIN=round
 
-R=1970/2070/-20/160
-J=X7c/4.0c
-Bx=x30g30
-By=y30g30
+R=1970/2050/-0.30/0.80
+J=X7c/3.0c
+Bx=x20g20
+By=y0.2g0.2
 color0=60/60/60
 color1=#4e79a7
 color2=#f28e2b
@@ -56,7 +56,7 @@ gmt psxy  -R -J -N -W1.5p,$color1 -O -K ${region}_Altimetry.txt   >> $ps
 }
 
 region="EC"
-gmt psbasemap -K -R$R -J$J -Y15.7c -X0.92c -BWesn+t'Northeast' -B$Bx -B$By+l'Sea level (cm)'  > $ps
+gmt psbasemap -K -R$R -J$J -Y16.1c -X1.0c -BWesn+t'Northeast' -B$Bx -B$By+l'Sea level (m)'  > $ps
 print_lines
 
 region="SE"
@@ -64,7 +64,7 @@ gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Southeast' -B$Bx -B$By  >> $ps
 print_lines
 
 region="GCE"
-gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWesn+t'Eastern Gulf Coast' -B$Bx -B$By+l'Sea level (cm)'  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-3.5c -BWesn+t'Eastern Gulf Coast' -B$Bx -B$By+l'Sea level (m)'  >> $ps
 print_lines
 
 region="GCW"
@@ -72,7 +72,7 @@ gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Western Gulf Coast' -B$Bx -B$By  >
 print_lines
 
 region="SWC"
-gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWesn+t'Southwest Coast' -B$Bx -B$By+l'Sea level (cm)'  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-3.5c -BWesn+t'Southwest Coast' -B$Bx -B$By+l'Sea level (m)'  >> $ps
 print_lines
 
 region="NWC"
@@ -80,12 +80,21 @@ gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Northwest Coast' -B$Bx -B$By  >> $
 print_lines
 
 region="PAC"
-gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWeSn+t'Pacific Islands' -B$Bx -B$By+l'Sea level (cm)'  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-3.5c -BWesn+t'Pacific Islands' -B$Bx -B$By+l'Sea level (m)'  >> $ps
 print_lines
 
 region="CAR"
-gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Carribean Islands' -B$Bx -B$By  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Caribbean Islands' -B$Bx -B$By  >> $ps
 print_lines
+
+region="ALN"
+gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-3.5c -BWeSn+t'Alaska North' -B$Bx -B$By+l'Sea level (m)'  >> $ps
+print_lines
+
+region="ALS"
+gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Alaska South' -B$Bx -B$By  >> $ps
+print_lines
+
 
 gmt psbasemap -O -K -R0/0.85/0.5/5.5 -JX6.8c/1.5c -X-3.8c -Y-2.05c -T100/100/1  >> $ps
 echo -e "0.0 5 \n 0.05 5" | gmt psxy -R -J -O -K -W1.5p,$color1 >> $ps

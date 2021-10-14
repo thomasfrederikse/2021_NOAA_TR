@@ -18,6 +18,7 @@ function DefSettings()
     settings["dir_project"] = homedir()*"/Projects/2021_NOAA_TR/"
     # File names
     settings["fn_region_mask"] = settings["dir_project"]*"Data/region_mask.nc"
+    settings["fn_basin_codes"] = settings["dir_project"]*"Data/basin_codes.nc"
     # Observed sea level
     settings["fn_tg_data"] = settings["dir_project"]*"Data/US_tg_monthly.xlsx" 
     settings["fn_GMSL_20c"] = settings["dir_project"]* "Data/GMSL_ensembles.nc" 
@@ -42,10 +43,10 @@ function DefSettings()
 
     # Scenarios
     settings["NCA5_scenarios"] = ["Low","IntLow","Int","IntHigh","High"]
-    settings["regions"]        = ["USA","EC","SE","GCE","GCW","SWC","NWC","PAC","CAR"]
+    settings["regions"]        = ["USA","EC","SE","GCE","GCW","SWC","NWC","PAC","CAR","ALN","ALS"]
 
     # Trajectory years
-    settings["years_trajectory"] = [1970:2070...]
+    settings["years_trajectory"] = [1970:2050...]
     settings["years_tg"] = [1920:2020...]
     settings["years_baseline"] = [1999:2001...]
     settings["years"] = [1900:2100...]
@@ -54,7 +55,7 @@ function DefSettings()
     settings["dir_gmt"] = settings["dir_project"]*"GMT/" 
     settings["dir_fig_1_gmsl_usa"] = settings["dir_gmt"]*"fig_1_gmsl_usa/" 
     settings["dir_fig_2_regional"] = settings["dir_gmt"]*"fig_2_regional/" 
-
+    settings["dir_fig_3_map"] = settings["dir_gmt"]*"fig_3_map/" 
 
     return settings
 end
