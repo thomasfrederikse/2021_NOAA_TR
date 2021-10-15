@@ -25,7 +25,8 @@ function DefSettings()
     settings["fn_tg_data"] = settings["dir_project"]*"Data/US_tg_monthly.xlsx" 
     settings["fn_GMSL_20c"] = settings["dir_project"]* "Data/GMSL_ensembles.nc" 
     settings["fn_GMSL_GSFC"] = settings["dir_project"]*"Data/GMSL_TPJAOS_5.0_199209_202106.txt" 
-    # Altimetry
+    # Altimetry and GMSL
+    settings["fn_gmsl_20c"] = settings["dir_project"]*"Data/global_timeseries_measures.nc"
     settings["fn_GIA"] = settings["dir_project"]*"Data/GIA_Caron_stats_05.nc"
     settings["fn_altimetry"] = settings["dir_project"]*"Data/CDS_monthly_1993_2019.nc"
     settings["fn_GRD"] = settings["dir_project"]*"Data/grd_1992_2020.nc"
@@ -59,5 +60,6 @@ function DefSettings()
     settings["dir_fig_1_gmsl_usa"] = settings["dir_gmt"]*"fig_1_gmsl_usa/" 
     settings["dir_fig_2_regional"] = settings["dir_gmt"]*"fig_2_regional/" 
     settings["dir_fig_3_map"] = settings["dir_gmt"]*"fig_3_map/" 
+    settings["dir_fig_4_gmsl"] = settings["dir_gmt"]*"fig_4_gmsl/" 
     return settings
 end

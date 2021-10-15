@@ -12,7 +12,7 @@ The code can be found in the `Code` folder. The folder contains the following fi
 - `LocalProjections.jl`: Reads and processes the local projections at the tide-gauge locations and computes the trajectories
 - `Simple_plots.jl`: Makes some simple plots and saves the time series for plotting by GMT. Currently in a state of UTTER chaos
 - `convert_NCA5_file.jl`: Convert the NCA5 projections file from CSV to NetCDF
-- `Hector.jl`: Wrapper for [Hector]{http://segal.ubi.pt/hector/}, used to compute trends and uncertainties.
+- `Hector.jl`: Wrapper for [Hector](http://segal.ubi.pt/hector/), used to compute trends and uncertainties.
 - `Masks.jl`: Defines the region masks for each region.
 
 ### Data
@@ -37,7 +37,7 @@ The Data directory contains both the input data sets and the output.
 - `region_mask.nc`: Mask with all regions
 
 ### GMT
-This directory contains the [GMT]{https://www.generic-mapping-tools.org/} scripts to make the final plots
+This directory contains the [GMT](https://www.generic-mapping-tools.org/) scripts to make the final plots
 
 ### Dependencies
 A lot. All scripts are in Julia. TBD

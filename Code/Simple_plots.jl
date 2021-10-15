@@ -72,6 +72,52 @@ function figure_2(settings)
     savefig("extrap_regr_alt.png")
 end
 
+function figure_4(settings)
+    # Global and regional sea level change and its components
+    t = [1900:2018...]
+    glac = zeros(length(t),3)
+    GrIS = zeros(length(t),3)
+    AIS = zeros(length(t),3)
+    tws = zeros(length(t),3)
+    steric = zeros(length(t),3)
+    budget = zeros(length(t),3)
+    GMSL = zeros(length(t),3)
+    read_gmsl_var!("glac",glac,settings)
+    read_gmsl_var!("GrIS",GrIS,settings)
+    read_gmsl_var!("AIS",AIS,settings)
+    read_gmsl_var!("tws",tws,settings)
+    read_gmsl_var!("sum_of_contrib_processes",budget,settings)
+    read_gmsl_var!("sum_of_contrib_processes",budget,settings)
+    read_gmsl_var2!("global_average_sea_level_change",GMSL,settings)
+    read_gmsl_var2!("global_average_thermosteric_sea_level_change",steric,settings)
+
+    # Read US MSL
+    USA_20c = ncread(settings["fn_regional_obs"],"USA_tg")
+    fdiff = mean(USA_20c[21:40]) - mean(GMSL[21:40,2])
+    save_ts_unc_gmt(t,0.001.*(glac),settings["dir_fig_4_gmsl"]*"glac.txt")
+    save_ts_unc_gmt(t,0.001.*(GrIS),settings["dir_fig_4_gmsl"]*"GrIS.txt")
+    save_ts_unc_gmt(t,0.001.*(AIS),settings["dir_fig_4_gmsl"]*"AIS.txt")
+    save_ts_unc_gmt(t,0.001.*(tws),settings["dir_fig_4_gmsl"]*"tws.txt")
+    save_ts_unc_gmt(t,0.001.*(steric),settings["dir_fig_4_gmsl"]*"steric.txt")
+    save_ts_unc_gmt(t,0.001.*(budget.+fdiff),settings["dir_fig_4_gmsl"]*"budget.txt")
+    save_ts_unc_gmt(t,0.001.*(GMSL.+fdiff),settings["dir_fig_4_gmsl"]*"GMSL.txt")
+    save_ts_gmt(settings["years"],0.001.*(USA_20c),settings["dir_fig_4_gmsl"]*"USA_MSL.txt")
+end
+
+function read_gmsl_var!(varname,store,settings)
+    store[:,1] = ncread(settings["fn_gmsl_20c"],varname*"_lower")
+    store[:,2] = ncread(settings["fn_gmsl_20c"],varname*"_mean")
+    store[:,3] = ncread(settings["fn_gmsl_20c"],varname*"_upper")
+    return nothing
+end
+
+function read_gmsl_var2!(varname,store,settings)
+    store[:,1] = ncread(settings["fn_gmsl_20c"],varname*"_lower")
+    store[:,2] = ncread(settings["fn_gmsl_20c"],varname)
+    store[:,3] = ncread(settings["fn_gmsl_20c"],varname*"_upper")
+    return nothing
+end
+
 function save_ts_unc_gmt(years,ts,fn)
     acc_idx = isfinite.(ts[:,2])
     sdata = [years[acc_idx] ts[acc_idx,2] ts[acc_idx,1] ts[acc_idx,3]]
@@ -85,3 +131,4 @@ function save_ts_gmt(years,ts,fn)
     writedlm(fn,sdata,";")
     return nothing
 end
+

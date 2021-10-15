@@ -55,6 +55,7 @@ gmt psxy  -R -J -N -W1.0p,$colorhigh -O -K GMSL_High.txt   >> $ps
 gmt psxy  -R -J -N -W1.5p,$color5 -O -K GMSL_Trajectory.txt   >> $ps
 gmt psxy  -R -J -N -W1.5p,$color0 -O -K GMSL_20c.txt   >> $ps
 gmt psxy  -R -J -N -W1.5p,$color1 -O -K GMSL_Altimetry.txt   >> $ps
+echo "1970 0.7 a)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
 gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Contiguous United States' -B$Bx -B$By  >> $ps
 gmt psxy  -R -J -L+bD -t50 -N -G$color5 -O -K USA_Trajectory.txt >> $ps
@@ -72,6 +73,7 @@ gmt psxy  -R -J -N -W1.0p,$colorhigh -O -K USA_High.txt   >> $ps
 gmt psxy  -R -J -N -W1.5p,$color5 -O -K USA_Trajectory.txt   >> $ps
 gmt psxy  -R -J -N -W1.5p,$color0 -O -K USA_20c.txt   >> $ps
 gmt psxy  -R -J -N -W1.5p,$color1 -O -K USA_Altimetry.txt   >> $ps
+echo "1970 0.7 b)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
 gmt psbasemap -O -K -R0/0.85/0.5/5.5 -JX6.8c/1.5c -X-3.8c -Y-2.05c -T100/100/1  >> $ps
 echo -e "0.0 5 \n 0.05 5" | gmt psxy -R -J -O -K -W1.5p,$color1 >> $ps
