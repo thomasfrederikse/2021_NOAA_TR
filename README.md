@@ -4,11 +4,13 @@ This repository contains almost all code and data needed to compute the NOAA tec
 ## Contents
 ### Code
 The code can be found in the `Code` folder. The folder contains the following files:
+
 - `run_NOAA_tr.jl`: This is the main routine that (eventually) calls all the functions to compute the projections.
 - `ComputeRegionalObs.jl`: Reads and processes the regional observations
 - `GlobalProjections.jl`: Reads and processes the GMSL observations and projections, and computes the trajectory
 - `RegionalProjections.jl`: Reads and processes the regional projections and computes the trajectories
-- `Simple_plots.jl`: Makes some simple plots and saves the time series for plotting by GMT. Currently in a state of chaos
+- `LocalProjections.jl`: Reads and processes the local projections at the tide-gauge locations and computes the trajectories
+- `Simple_plots.jl`: Makes some simple plots and saves the time series for plotting by GMT. Currently in a state of UTTER chaos
 - `convert_NCA5_file.jl`: Convert the NCA5 projections file from CSV to NetCDF
 - `Hector.jl`: Wrapper for [Hector]{http://segal.ubi.pt/hector/}, used to compute trends and uncertainties.
 - `Masks.jl`: Defines the region masks for each region.
