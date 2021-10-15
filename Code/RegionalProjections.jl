@@ -1,7 +1,7 @@
 module RegionalProjections
 # --------------------------------------------
 # Process regiona; projections and observations
-# - Read TG estimates (Ben)
+# - Read TG estimates
 # - Estimate trend + acceleration using Hector
 # - Extrapolate data from tide gauges
 # - Read NCA5 projections
@@ -69,27 +69,31 @@ function ReadNCA5Regional(region_data,settings)
     # Read mask
     mask = Masks.ReadMask(settings) 
     area = ComputeGridArea(mask["ϕ"],mask["θ"])
+    ϕ,θ,years,percentiles,NCA_grid = ReadNCA5(settings)
+
+    NCA_projections = Dict()
+    NCA_projections["years"] = years
+    [NCA_projections[region] = Dict() for region ∈ settings["regions"]]
+    trajectory_idx = settings["years_trajectory"] .== years[1]
+    for scenario ∈ settings["NCA5_scenarios"]
+        NCA_int = LinearInterpolation((ϕ, θ,years,percentiles),NCA_grid[scenario],extrapolation_bc = Line())(mask["ϕ"],mask["θ"],years,percentiles);
+        for region ∈ settings["regions"]
+            NCA_projections[region][scenario] = (sum((@. NCA_int * area*mask[region]),dims=(1,2)) / sum(area .* mask[region]))[1,1,:,:]
+            NCA_projections[region][scenario] = NCA_projections[region][scenario] .- NCA_projections[region][scenario][1,2] .+ region_data[region]["η_trajectory"][trajectory_idx,2]
+        end
+    end
+    return NCA_projections
+end
+
+function ReadNCA5(settings)
     # Read projections
     ϕ = convert.(Float32,ncread(settings["fn_grid_NCA5"],"lon"))
     θ = convert.(Float32,ncread(settings["fn_grid_NCA5"],"lat"))
     years = convert.(Float32,ncread(settings["fn_grid_NCA5"],"time"))[1:9]
     percentiles = convert.(Float32,ncread(settings["fn_grid_NCA5"],"percentiles"))
     NCA_grid = Dict()
-    [NCA_grid[scn] = convert.(Float32,ncread(settings["fn_grid_NCA5"],scn,start=[1,1,1,1],count=[-1,-1,9,-1])) for scn ∈ settings["NCA5_scenarios"]]
-
-    NCA_projections = Dict()
-    NCA_projections["years"] = years
-    [NCA_projections[region] = Dict() for region ∈ settings["regions"]]
-        
-    trajectory_idx = settings["years_trajectory"] .== years[1]
-    for scenario ∈ settings["NCA5_scenarios"]
-        NCA_int = LinearInterpolation((ϕ, θ,years,percentiles),NCA_grid[scenario],extrapolation_bc = Line())(mask["ϕ"],mask["θ"],years,percentiles);
-        for region ∈ settings["regions"]
-            NCA_projections[region][scenario] = 10 .* (sum((@. NCA_int * area*mask[region]),dims=(1,2)) / sum(area .* mask[region]))[1,1,:,:]
-            NCA_projections[region][scenario] = NCA_projections[region][scenario] .- NCA_projections[region][scenario][1,2] .+ region_data[region]["η_trajectory"][trajectory_idx,2]
-        end
-    end
-    return NCA_projections
+    [NCA_grid[scn] = 10 .* convert.(Float32,ncread(settings["fn_grid_NCA5"],scn,start=[1,1,1,1],count=[-1,-1,9,-1])) for scn ∈ settings["NCA5_scenarios"]]
+    return ϕ,θ,years,percentiles,NCA_grid
 end
 
 function ComputeGridArea(lon,lat)

@@ -4,12 +4,14 @@ include(dir_code*"Masks.jl")
 include(dir_code*"ComputeRegionalObs.jl")
 include(dir_code*"GlobalProjections.jl")
 include(dir_code*"RegionalProjections.jl")
+include(dir_code*"LocalProjections.jl")
 
 function main()
     settings = DefSettings()
     ComputeRegionalObs.RunComputeRegionalObs(settings)
     GlobalProjections.RunGlobalProjections(settings)
     RegionalProjections.RunRegionalProjections(settings)
+    LocalProjections.RunLocalProjections(settings)
     return nothing
 end
 
@@ -39,6 +41,7 @@ function DefSettings()
 
     settings["fn_proj_glb"] = settings["dir_project"]*"Data/NOAA_TR_global_projections.nc" 
     settings["fn_proj_reg"] = settings["dir_project"]*"Data/NOAA_TR_regional_projections.nc" 
+    settings["fn_proj_lcl"] = settings["dir_project"]*"Data/NOAA_TR_local_projections.nc" 
     settings["fn_regional_obs"] = settings["dir_project"]* "Data/NOAA_TR_regional_obs.nc"   
 
     # Scenarios
@@ -56,6 +59,5 @@ function DefSettings()
     settings["dir_fig_1_gmsl_usa"] = settings["dir_gmt"]*"fig_1_gmsl_usa/" 
     settings["dir_fig_2_regional"] = settings["dir_gmt"]*"fig_2_regional/" 
     settings["dir_fig_3_map"] = settings["dir_gmt"]*"fig_3_map/" 
-
     return settings
 end
