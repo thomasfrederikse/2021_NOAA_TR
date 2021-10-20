@@ -89,9 +89,9 @@ function compute_GMSL_trajectory(GMSL_20c,settings)
         sortperm!(sidx, η_projected[ts,:])
         cumsum!(𝚲,GMSL_20c["Λ"][sidx])
         @. Η = @views η_projected[ts,sidx];
-        projection_mean[ts,1] = Η[findfirst(>(0.05),𝚲)]
+        projection_mean[ts,1] = Η[findfirst(>(0.17),𝚲)]
         projection_mean[ts,2] = Η[findfirst(>(0.5),𝚲)]
-        projection_mean[ts,3] = Η[findfirst(>(0.95),𝚲)]
+        projection_mean[ts,3] = Η[findfirst(>(0.83),𝚲)]
     end
     GMSL_Trajectory = Dict()
     GMSL_Trajectory["years"] = settings["years_trajectory"]

@@ -1,3 +1,4 @@
+module LocalProjections
 # -------------------------------------------
 # Compute local extrapolation and projections
 # for individual tide-gauge locations
@@ -18,7 +19,7 @@ include(dir_code*"RegionalProjections.jl")
 
 function RunLocalProjections(settings)
     tg_monthly = ComputeRegionalObs.ReadTGData(settings)
-    tg_annual = ComputeRegionalObs.ConvertMonthlyToAnnual(tg_monthly,settings)
+    tg_annual  = ComputeRegionalObs.ConvertMonthlyToAnnual(tg_monthly,settings)
 
     local_projections = Array{Dict}(undef,length(tg_annual["station_names"]))
     for tg ∈ eachindex(local_projections)
@@ -103,8 +104,4 @@ function RunLocalProjections(settings)
     close(fh)
 end
 
-
-
-
-
-
+end

@@ -71,9 +71,9 @@ function EstTrend(time,height;accel=false,model="White",AR=0,MA=0,SA=false,SSA=f
     run(pipeline(`./estimatetrend`; stdout=devnull, stderr=devnull));
     cd(pdir);
     output = JSON.parse(join(readlines(fn_output)));
-    rm(fn_config);
-    rm(fn_input);
-    rm(fn_output);
+    # rm(fn_config);
+    # rm(fn_input);
+    # rm(fn_output);
     return output;
 end
 

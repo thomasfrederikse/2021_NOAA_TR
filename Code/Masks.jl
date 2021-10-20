@@ -1,6 +1,9 @@
 module Masks
+
 using NetCDF
 using NCDatasets
+using Interpolations
+
 function CreateMask(settings)
     # ----------------------------------------------------------------------------
     # Make a 0.5° mask of US coastal sea level to combine with CDS/CMEMS altimetry
@@ -16,7 +19,6 @@ function CreateMask(settings)
     # 9. ALN Alaska North
     # 10. ALS Alaska South
     # ----------------------------------------------------------------------------
-    fn_bathy = homedir()*"/Data/GEBCO/grid_05.nc"
     fn_slm   = homedir()*"/Data/GRACE/JPL_mascon/mask.nc"
 
     # boundaries
@@ -40,7 +42,7 @@ function CreateMask(settings)
     ϕ = reshape(ncread(fn_slm,"lon"),(:,1))
     θ = reshape(ncread(fn_slm,"lat"),(1,:))
     slm = convert.(Bool,1 .- ncread(fn_slm,"land"))
-    depth = ncread(fn_bathy,"z")
+    depth = ncread(settings["fn_bathymetry"],"z")
     basin = ncread(settings["fn_basin_codes"],"basin")
 
     EC_mask = @. (ϕ>=EC[1,1]) & (ϕ<=EC[1,2]) & (θ>=EC[2,1]) & (θ<=EC[2,2]) & slm & (depth > -500)
@@ -130,6 +132,37 @@ function ReadMask(settings)
         mask[region*"_unc"] = convert.(Bool,ncread(settings["fn_region_mask"],region*"_unc"))
     end
     return mask
+end
+
+function RegridBasinCodes(settings)
+    # --------------------------------------------------------------
+    # Regrid the basin code map from Eric Leuliette/NOAA
+    # Data provided by the NOAA Laboratory for Satellite Altimetry."
+    # --------------------------------------------------------------
+    fn_in = homedir()*"/Data/Basins/basin_codes.nc"
+    # Read
+    ncinfo(fn_in)
+    θ_in = ncread(fn_in,"lat")
+    ϕ_in = ncread(fn_in,"lon")
+    B_in = 1.0f0 .* ncread(fn_in,"basin")
+
+    # Interpolate
+    ϕ = [0.25f0:0.5f0:359.75f0...]
+    θ = [-89.75f0:0.5f0:89.75f0...]
+    B = interpolate((ϕ_in,θ_in), B_in, Gridded(Constant()))(ϕ,θ)
+
+    # Write
+    fh = Dataset(settings["fn_basin_codes"],"c")
+    defDim(fh,"lon", length(ϕ))
+    defDim(fh,"lat", length(θ))
+    defVar(fh,"lon",ϕ,("lon",),deflatelevel=5)
+    defVar(fh,"lat",θ,("lat",),deflatelevel=5)
+    defVar(fh,"basin",convert.(UInt8,B),("lon","lat",),deflatelevel=5)
+    fh.attrib["title"] = ["BASIN5 - Global 5-minute Basin Grid regridded to 0.5 degree"]
+    fh.attrib["data_source"] = ["Data provided by the NOAA Laboratory for Satellite Altimetry, regridded afterwards"]
+    fh.attrib["author"] = ["Original data: Eric Leuliette NOAA, regridded by Thomas Frederikse NASA JPL/Caltech"]
+    close(fh)
+    return nothing
 end
 
 end
