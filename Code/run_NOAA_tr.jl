@@ -43,7 +43,7 @@ function DefSettings()
     settings["fn_MEI_1"] = settings["dir_project"]*"Data/ClimIdx/MEIext.data" 
     settings["fn_MEI_2"] = settings["dir_project"]*"Data/ClimIdx/meiv2.data" 
     settings["fn_GMSL_ENSO"] = settings["dir_project"]*"Data/enso_correction.mat"
-
+    
     # NCA5 projections
     settings["fn_GMSL_NCA5"] = settings["dir_project"]*"Data/NCA5_RSL_projections_vlm_gmsl.nc" 
     settings["fn_grid_NCA5"] = settings["dir_project"]*"Data/NCA5_RSL_projections_vlm_grid.nc" 
@@ -51,16 +51,17 @@ function DefSettings()
     settings["fn_proj_reg"] = settings["dir_project"]*"Data/NOAA_TR_regional_projections.nc" 
     settings["fn_proj_lcl"] = settings["dir_project"]*"Data/NOAA_TR_local_projections.nc" 
     settings["fn_regional_obs"] = settings["dir_project"]* "Data/NOAA_TR_regional_obs.nc"   
+    settings["dir_component_grid"] =settings["dir_project"]*"Data/NCA5_grids/"
 
     # Scenarios
     settings["NCA5_scenarios"] = ["Low","IntLow","Int","IntHigh","High"]
     settings["regions"]        = ["USA","EC","SE","GCE","GCW","SWC","NWC","PAC","CAR","ALN","ALS"]
 
     # Trajectory years
-    settings["years_trajectory"] = [1970:2100...]
+    settings["years_trajectory"] = [1970:2200...]
     settings["years_tg"] = [1920:2020...]
     settings["years_baseline"] = [1999:2001...]
-    settings["years"] = [1900:2100...]
+    settings["years"] = [1900:2200...]
 
     # Figure directories
     settings["dir_gmt"] = settings["dir_project"]*"GMT/" 

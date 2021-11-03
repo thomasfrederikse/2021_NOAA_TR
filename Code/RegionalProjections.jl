@@ -60,6 +60,8 @@ function ComputeRegionalTrajectory!(region_data,settings)
         trajectory_stats = zeros(Float32,length(settings["years_trajectory"]),3)
         [trajectory_stats[t,:] = quantile((@views trajectory_arr[t,:]),[0.17,0.50,0.83]) for t ∈ 1:length(settings["years_trajectory"])]
         region_data[region]["η_trajectory"] = trajectory_stats
+        region_data[region]["trend"] = [μ_sol[2]-σ_sol[2],μ_sol[2],μ_sol[2]+σ_sol[2]]
+        region_data[region]["accel"] = 2 .*[μ_sol[3]-σ_sol[3],μ_sol[3],μ_sol[3]+σ_sol[3]]
     end
     return nothing
 end
@@ -118,6 +120,14 @@ function SaveData(region_data,NCA_projections,settings)
     trajectory = zeros(Float32,length(settings["regions"]),length(settings["years"]),3) .* NaN32
     [trajectory[region_idx,:,:] = (LinearInterpolation((settings["years_trajectory"],[1.0f0:3.0f0...]),region_data[region]["η_trajectory"],extrapolation_bc=NaN32)[settings["years"],[1.0f0:3.0f0...]]) for (region_idx,region) ∈ enumerate(settings["regions"])]
     defVar(fh,"MSL_Trajectory",trajectory,("region","years","percentiles"),deflatelevel=5)
+
+    # Write trends and accelerations
+    trends = zeros(Float32,length(settings["regions"]),3) .* NaN32
+    accels = zeros(Float32,length(settings["regions"]),3) .* NaN32
+    [trends[region_idx,:] = region_data[region]["trend"] for (region_idx,region) ∈ enumerate(settings["regions"])]
+    [accels[region_idx,:] = region_data[region]["accel"] for (region_idx,region) ∈ enumerate(settings["regions"])]
+    defVar(fh,"MSL_trend",trends,("region","percentiles"),deflatelevel=5)
+    defVar(fh,"MSL_accel",accels,("region","percentiles"),deflatelevel=5)
 
     # Write scenarios
     scen_array = zeros(Float32,length(settings["regions"]),length(settings["years"]),3) .* NaN32

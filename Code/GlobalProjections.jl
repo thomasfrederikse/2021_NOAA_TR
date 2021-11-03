@@ -65,13 +65,13 @@ function compute_GMSL_trajectory(GMSL_20c,settings)
     # Compute and extrapolate trend and acceleration
     amat = ones(length(t_acc),3)
     amat[:,2] = GMSL_20c["years"][t_acc] .- mean(GMSL_20c["years"][t_acc])
-    @. amat[:,3] = (GMSL_20c["years"][t_acc] - $mean(GMSL_20c["years"][t_acc]))^2
+    @. amat[:,3] = 0.5 * (GMSL_20c["years"][t_acc] - $mean(GMSL_20c["years"][t_acc]))^2
     amat_tr = transpose(amat)
     amat_sq = inv(amat_tr*amat)
     sol_arr = zeros(length(GMSL_20c["Λ"]),3)
     amat_expand = ones(length(settings["years_trajectory"]),3)
     amat_expand[:,2] = settings["years_trajectory"] .- mean(GMSL_20c["years"][t_acc])
-    @. amat_expand[:,3] = (settings["years_trajectory"] - $mean(GMSL_20c["years"][t_acc]))^2
+    @. amat_expand[:,3] = 0.5 * (settings["years_trajectory"] - $mean(GMSL_20c["years"][t_acc]))^2
     η_projected = zeros(length(settings["years_trajectory"]),length(GMSL_20c["Λ"]))
     noise = Hector.GenerateNoise(GMSL_20c["years"][t_acc],GMSL_20c["η_mean"][t_acc,2],length(GMSL_20c["Λ"]),length(GMSL_20c["years"]);accel=true,model="Powerlaw");
     GMSL_20c["η"] .+= noise
@@ -98,6 +98,23 @@ function compute_GMSL_trajectory(GMSL_20c,settings)
     GMSL_Trajectory["η_mean"] = projection_mean
     GMSL_Trajectory["Λ"] = GMSL_20c["Λ"]
     GMSL_Trajectory["η"] = η_projected
+
+    # Get trend and acceleration
+    GMSL_Trajectory["trend"] = zeros(Float32,3)
+    sidx = sortperm(sol_arr[:,2])
+    𝚲 = cumsum(GMSL_20c["Λ"][sidx])
+    Η = sol_arr[sidx,2];
+    GMSL_Trajectory["trend"][1] = Η[findfirst(>(0.17),𝚲)]
+    GMSL_Trajectory["trend"][2] = Η[findfirst(>(0.5),𝚲)]
+    GMSL_Trajectory["trend"][3] = Η[findfirst(>(0.83),𝚲)]
+
+    GMSL_Trajectory["accel"] = zeros(Float32,3)
+    sidx = sortperm(sol_arr[:,3])
+    𝚲 = cumsum(GMSL_20c["Λ"][sidx])
+    Η = sol_arr[sidx,3];
+    GMSL_Trajectory["accel"][1] = Η[findfirst(>(0.17),𝚲)]
+    GMSL_Trajectory["accel"][2] = Η[findfirst(>(0.5),𝚲)]
+    GMSL_Trajectory["accel"][3] = Η[findfirst(>(0.83),𝚲)]
     return GMSL_Trajectory
 end
 
@@ -146,6 +163,10 @@ function save_data(GMSL_20c,GMSL_Trajectory,GMSL_Altimetry,GMSL_NCA5,settings)
     defVar(fh,"GMSL_20c",Float32,("years","percentiles"),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,GMSL_20c["years"]),[1.0f0:3.0f0...]),GMSL_20c["η_mean"],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
     defVar(fh,"GMSL_Altimetry",Float32,("years",),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,GMSL_Altimetry["years"])),GMSL_Altimetry["η_mean"],extrapolation_bc=NaN32)(settings["years"])
     defVar(fh,"GMSL_Trajectory",Float32,("years","percentiles"),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,GMSL_Trajectory["years"]),[1.0f0:3.0f0...]),GMSL_Trajectory["η_mean"],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
+    
+    defVar(fh,"GMSL_trend",GMSL_Trajectory["trend"],("percentiles",),deflatelevel=5)
+    defVar(fh,"GMSL_accel",GMSL_Trajectory["accel"],("percentiles",),deflatelevel=5)
+
     # Write scenarios
     for scenario ∈ settings["NCA5_scenarios"]
         defVar(fh,"GMSL_"*scenario,Float32,("years","percentiles"),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,GMSL_NCA5["years"]),[1.0f0:3.0f0...]),GMSL_NCA5[scenario],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])

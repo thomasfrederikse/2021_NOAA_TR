@@ -2,12 +2,14 @@ module SaveFigureData
 
 using NetCDF
 using DelimitedFiles
+using Statistics
 # ---------------------------------------------------
 # Save the data for the figures 
 # The figures themselves are created 
 # from GMT scripts
 # ---------------------------------------------------]
 function RunSaveFigureData(settings)
+    println("Saving figure data...")
     fig_1_gmsl_usa(settings)
     fig_2_regional(settings)
     fig_4_gmsl(settings)

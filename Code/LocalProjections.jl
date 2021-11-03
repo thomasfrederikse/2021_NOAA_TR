@@ -52,6 +52,8 @@ function RunLocalProjections(settings)
         trajectory_stats = zeros(Float32,length(settings["years_trajectory"]),3)
         [trajectory_stats[t,:] = quantile((@views trajectory_arr[t,:]),[0.17,0.50,0.83]) for t ∈ 1:length(settings["years_trajectory"])]
         local_projections[tg]["η_trajectory"] = LinearInterpolation((settings["years_trajectory"],[1.0f0:3.0f0...]),trajectory_stats,extrapolation_bc=NaN32)[settings["years"],[1.0f0:3.0f0...]]
+        local_projections[tg]["trend"] = [μ_sol[2]-σ_sol[2],μ_sol[2],μ_sol[2]+σ_sol[2]]
+        local_projections[tg]["accel"] = 2 .*[μ_sol[3]-σ_sol[3],μ_sol[3],μ_sol[3]+σ_sol[3]]
     end
 
     # 2. Read projections
@@ -74,6 +76,10 @@ function RunLocalProjections(settings)
     station_coords = Array{Float32}(undef,length(local_projections),2)
     η_tg = Array{Float32}(undef,length(local_projections),length(settings["years"]))
     η_trajectory = Array{Float32}(undef,length(local_projections),length(settings["years"]),3)
+
+    trends = Array{Float32}(undef,length(local_projections),3)
+    accels = Array{Float32}(undef,length(local_projections),3)
+
     scn_proj = Dict()
     [scn_proj[scenario] = Array{Float32}(undef,length(local_projections),length(settings["years"]),3) for scenario ∈ settings["NCA5_scenarios"]]
     for tg ∈ eachindex(local_projections)
@@ -82,6 +88,8 @@ function RunLocalProjections(settings)
         η_tg[tg,:] = local_projections[tg]["η_tg"]
         η_trajectory[tg,:,:] = local_projections[tg]["η_trajectory"]
         [scn_proj[scenario][tg,:,:] = local_projections[tg]["η_projection"][scenario] for scenario ∈ settings["NCA5_scenarios"]]
+        trends[tg,:] = local_projections[tg]["trend"]
+        accels[tg,:] = local_projections[tg]["accel"]
     end
     fh = Dataset(settings["fn_proj_lcl"],"c")
     defDim(fh,"years", length(settings["years"]))
@@ -97,11 +105,12 @@ function RunLocalProjections(settings)
     # Write trajectory
     defVar(fh,"MSL_Observed",η_tg,("tg","years"),deflatelevel=5)
     defVar(fh,"MSL_Trajectory",η_trajectory,("tg","years","percentiles"),deflatelevel=5)
+    defVar(fh,"MSL_trend",trends,("tg","percentiles"),deflatelevel=5)
+    defVar(fh,"MSL_accel",accels,("tg","percentiles"),deflatelevel=5)
     # Write scenarios
     for scenario ∈ settings["NCA5_scenarios"]
         defVar(fh,"MSL_"*scenario,scn_proj[scenario],("tg","years","percentiles",),deflatelevel=5)
     end
     close(fh)
 end
-
 end
