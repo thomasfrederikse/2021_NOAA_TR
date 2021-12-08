@@ -1,5 +1,6 @@
 # Run all the code for the NOAA TR
 dir_code = homedir()*"/Projects/2021_NOAA_TR/Code/"
+include(dir_code*"ConvertNCA5ToGrid.jl")
 include(dir_code*"Masks.jl")
 include(dir_code*"ComputeRegionalObs.jl")
 include(dir_code*"GlobalProjections.jl")
@@ -9,6 +10,7 @@ include(dir_code*"SaveFigureData.jl")
 
 function main()
     settings = DefSettings()
+    ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Only needed once
     ComputeRegionalObs.RunComputeRegionalObs(settings)
     GlobalProjections.RunGlobalProjections(settings)
     RegionalProjections.RunRegionalProjections(settings)
@@ -45,17 +47,23 @@ function DefSettings()
     settings["fn_GMSL_ENSO"] = settings["dir_project"]*"Data/enso_correction.mat"
     
     # NCA5 projections
-    settings["fn_GMSL_NCA5"] = settings["dir_project"]*"Data/NCA5_RSL_projections_vlm_gmsl.nc" 
-    settings["fn_grid_NCA5"] = settings["dir_project"]*"Data/NCA5_RSL_projections_vlm_grid.nc" 
+    settings["dir_NCA5_raw"] = homedir() * "/Data/NCA5/"
+    settings["dir_NCA5"] =settings["dir_project"]*"Data/NCA5_projections/"
+
+
+    # settings["fn_GMSL_NCA5"] = settings["dir_project"]*"Data/NCA5_RSL_projections_vlm_gmsl.nc" 
+    # settings["fn_grid_NCA5"] = settings["dir_project"]*"Data/NCA5_RSL_projections_vlm_grid.nc" 
+    # Files to save the NOAA projections
     settings["fn_proj_glb"] = settings["dir_project"]*"Data/NOAA_TR_global_projections.nc" 
     settings["fn_proj_reg"] = settings["dir_project"]*"Data/NOAA_TR_regional_projections.nc" 
     settings["fn_proj_lcl"] = settings["dir_project"]*"Data/NOAA_TR_local_projections.nc" 
     settings["fn_regional_obs"] = settings["dir_project"]* "Data/NOAA_TR_regional_obs.nc"   
-    settings["dir_component_grid"] =settings["dir_project"]*"Data/NCA5_grids/"
 
     # Scenarios
-    settings["NCA5_scenarios"] = ["Low","IntLow","Int","IntHigh","High"]
-    settings["regions"]        = ["USA","EC","SE","GCE","GCW","SWC","NWC","PAC","CAR","ALN","ALS"]
+    settings["NCA5_scenarios"]  = ["Low","IntLow","Int","IntHigh","High"]
+    settings["regions"]         = ["USA","EC","SE","GCE","GCW","SWC","NWC","PAC","CAR","ALN","ALS"]
+    settings["processes"]       = ["AIS","GIS","glaciers","landwaterstorage","oceandynamics","total","verticallandmotion"]
+    settings["processes_clim"]  = ["AIS","GIS","glaciers","landwaterstorage","oceandynamics"]
 
     # Trajectory years
     settings["years_trajectory"] = [1970:2200...]

@@ -144,11 +144,14 @@ function read_NCA5(GMSL_Trajectory,settings)
     println("  Reading NCA5 scenarios...")
     # Read the GMSL scenarios
     GMSL_NCA5 = Dict()
-    GMSL_NCA5["years"] = ncread(settings["fn_GMSL_NCA5"],"time",start=[1],count=[9])
-    [GMSL_NCA5[scenario] = 10.0f0 .* ncread(settings["fn_GMSL_NCA5"],scenario,start=[1,1],count=[9,-1]) for scenario ∈ settings["NCA5_scenarios"]]
-    # Tie trajectory to scenario in 2020
-    traj_idx = findall(GMSL_Trajectory["years"] .== 2020)
-    [GMSL_NCA5[scenario] = @. GMSL_NCA5[scenario] - GMSL_NCA5[scenario][1,2] + GMSL_Trajectory["η_mean"][traj_idx,2] for scenario ∈ settings["NCA5_scenarios"]]
+    GMSL_NCA5["years"] = ncread(settings["dir_NCA5"] * "NCA5_Low_gmsl.nc","years",start=[1],count=[9])
+    for scenario ∈ settings["NCA5_scenarios"]
+        fn = settings["dir_NCA5"] * "NCA5_"*scenario*"_gmsl.nc"
+        GMSL_NCA5[scenario] = ncread(fn,"total",start=[1,1],count=[9,-1])    
+        # Tie trajectory to scenario in 2020
+        traj_idx = findall(GMSL_Trajectory["years"] .== 2020)
+        GMSL_NCA5[scenario] = @. GMSL_NCA5[scenario] - GMSL_NCA5[scenario][1,2] + GMSL_Trajectory["η_mean"][traj_idx,2]
+    end
     return GMSL_NCA5
 end
 

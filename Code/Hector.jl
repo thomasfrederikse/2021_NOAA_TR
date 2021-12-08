@@ -7,9 +7,11 @@ module Hector
 using DelimitedFiles
 using Statistics
 using JSON
-function EstTrend(time,height;accel=false,model="White",AR=0,MA=0,SA=false,SSA=false,monthly=false)
+using Dates
+function EstTrend(time,height;accel=false,model="White",AR=0,MA=0,SA=false,SSA=false,monthly=false,tref=0.0f0)
     time = convert.(Float32,time)
     height = convert.(Float32,height)
+
     # Set time in MJD
     if monthly
         mjd = 30.5 * [1:length(time)...]
@@ -17,8 +19,15 @@ function EstTrend(time,height;accel=false,model="White",AR=0,MA=0,SA=false,SSA=f
         mjd = @. 365.25 * time - 678942
     end
 
+    if tref != 0.0f0
+        tdate = Date(floor(tref)) + Day(round(365*rem(tref,1)))
+        tyear = Year(tdate).value
+        tmonth = Month(tdate).value
+        tday = dayofmonth(tdate)
+    end
+
     # Filenames
-    dir_hector = homedir()*"/Code/Hector/hector_1.9_source/"
+    dir_hector = homedir()*"/Code/Hector/hector_2/"
     fn_config = dir_hector*"estimatetrend.ctl"
     fn_input  = dir_hector*"input.mom"
     fn_output  = dir_hector*"estimatetrend.json"
@@ -59,6 +68,9 @@ function EstTrend(time,height;accel=false,model="White",AR=0,MA=0,SA=false,SSA=f
     else
         throw(ArgumentError(model* " is not a valid noise model"))
     end
+    if tref != 0.0f0
+        push!(config_list,"ReferenceEpoch "*string(tyear)*" "*string(tmonth)*" "*string(tday)*"\n");
+    end
     push!(config_list,"AR_p "*string(AR)*"\n");
     push!(config_list,"MA_q "*string(MA)*"\n");
     push!(config_list,"JSON yes\n");
@@ -89,7 +101,7 @@ function GenerateNoise(time,height,n_sims,n_tsteps;accel=false,model="White",AR=
     # First step: get noise parameters:
     trend_info = EstTrend(time,height;accel,model,AR,MA,SA,SSA,monthly)
 
-    dir_hector = homedir()*"/Code/Hector/hector_1.9_source/"
+    dir_hector = homedir()*"/Code/Hector/hector_2/"
     fn_config = dir_hector*"simulatenoise.ctl"
 
     config_list = String[]
@@ -105,12 +117,12 @@ function GenerateNoise(time,height,n_sims,n_tsteps;accel=false,model="White",AR=
         push!(config_list,"NoiseModels GGM White\n")
     elseif model=="Powerlaw"
         push!(config_list,"NoiseModels Powerlaw White\n")
-    # elseif model=="ARMA"
-    #     push!(config_list,"NoiseModels ARMA White\n")
-    # elseif model=="Matern"
-    #     push!(config_list,"NoiseModels Matern White\n")
-    # elseif model=="White"
-    #     push!(config_list,"NoiseModels White\n")
+    elseif model=="ARMA"
+        push!(config_list,"NoiseModels ARMA White\n")
+    elseif model=="Matern"
+        push!(config_list,"NoiseModels Matern White\n")
+    elseif model=="White"
+        push!(config_list,"NoiseModels White\n")
     else
         throw(ArgumentError(model* " is not a implemented noise model for noise creation "))
     end
@@ -135,9 +147,9 @@ function GenerateNoise(time,height,n_sims,n_tsteps;accel=false,model="White",AR=
         val4=trend_info["NoiseModel"]["Powerlaw"]["d"]
         run(pipeline(`printf %".3f\n" $val1 $val2 $val3 $val4 `,`./simulatenoise`));
     end
-    noise = readdlm("Noise_0.mom",skipstart=1)[:,2]
-    rm(fn_config);
-    rm("Noise_0.mom");
+    noise = parse.(Float32,readlines("Noise_0.mom"))
+    # rm(fn_config);
+    # rm("Noise_0.mom");
     cd(pdir);
     noise = reshape(noise,(n_tsteps,n_sims))
     return noise

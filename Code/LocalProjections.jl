@@ -18,9 +18,15 @@ include(dir_code*"ComputeRegionalObs.jl")
 include(dir_code*"RegionalProjections.jl")
 
 function RunLocalProjections(settings)
+    local_projections = ReadTGData(settings)
+    ExtrapolateLocalTrajectory!(local_projections,settings)
+    local_NCA5, years_NCA5, pct_NCA5 = ReadLocalProjections(local_projections,settings)
+    save_data(local_projections,local_NCA5, years_NCA5, pct_NCA5,settings)
+end
+
+function ReadTGData(settings)
     tg_monthly = ComputeRegionalObs.ReadTGData(settings)
     tg_annual  = ComputeRegionalObs.ConvertMonthlyToAnnual(tg_monthly,settings)
-
     local_projections = Array{Dict}(undef,length(tg_annual["station_names"]))
     for tg ∈ eachindex(local_projections)
         local_projections[tg] = Dict()
@@ -28,8 +34,10 @@ function RunLocalProjections(settings)
         local_projections[tg]["station_coords"] = tg_annual["station_coords"][tg,:]
         local_projections[tg]["η_tg"] = LinearInterpolation(tg_annual["years"], tg_annual["rsl"][tg,:],extrapolation_bc=NaN32)(settings["years"])
     end
+    return local_projections
+end
 
-    # 1. Extrapolate
+function ExtrapolateLocalTrajectory!(local_projections,settings)
     println("  Extrapolating tide-gauge records to compute trajectory...")
     # Prepare design matrices
     years_estimate = intersect(settings["years_trajectory"],settings["years_tg"])
@@ -55,22 +63,61 @@ function RunLocalProjections(settings)
         local_projections[tg]["trend"] = [μ_sol[2]-σ_sol[2],μ_sol[2],μ_sol[2]+σ_sol[2]]
         local_projections[tg]["accel"] = 2 .*[μ_sol[3]-σ_sol[3],μ_sol[3],μ_sol[3]+σ_sol[3]]
     end
+    return nothing
+end
 
-    # 2. Read projections
-    println("  Reading NCA5 projections...")
-    ϕ,θ,years,percentiles,NCA_grid = RegionalProjections.ReadNCA5(settings)
-    baseline_idx = settings["years"] .== years[1]
-    for tg ∈ eachindex(local_projections)
-        ϕ_idx = argmin(@. abs(local_projections[tg]["station_coords"][1]-ϕ))
-        θ_idx = argmin(@. abs(local_projections[tg]["station_coords"][2]-θ))
-        local_projections[tg]["η_projection"] = Dict()
-        for scenario ∈ settings["NCA5_scenarios"]
-            local_projections[tg]["η_projection"][scenario] = LinearInterpolation((years,[1.0f0:3.0f0...]),NCA_grid[scenario][ϕ_idx,θ_idx,:,:],extrapolation_bc=NaN32)[settings["years"],[1.0f0:3.0f0...]]
-            local_projections[tg]["η_projection"][scenario] = local_projections[tg]["η_projection"][scenario] .- local_projections[tg]["η_projection"][scenario][baseline_idx,2] .+ local_projections[tg]["η_trajectory"][baseline_idx,2]
+function ReadLocalProjections(local_projections,settings)
+    # Locations and time
+    fn = settings["dir_NCA5"]*"NCA5_Low_grid.nc"
+    lon_NCA5 = ncread(fn,"lon")
+    lat_NCA5 = ncread(fn,"lat")
+    years_NCA5 = convert.(Float32,ncread(fn,"years",start=[1],count=[9]))
+    pct_NCA5 = convert.(Float32,ncread(fn,"percentiles"))
+
+    # Find nearest grid cell
+    NCA5_loc = zeros(Int,length(local_projections),2)
+    for tg in eachindex(local_projections)
+        NCA5_loc[tg,1] = argmin(@. abs(local_projections[tg]["station_coords"][1]-lon_NCA5))
+        NCA5_loc[tg,2] = argmin(@. abs(local_projections[tg]["station_coords"][2]-lat_NCA5))
+    end
+
+    # Create data sctructure
+    local_NCA5 = Array{Dict}(undef,length(tg_annual["station_names"]))
+    for tg in eachindex(local_projections)
+        local_NCA5[tg] = Dict()
+        for scn in settings["NCA5_scenarios"]
+            local_NCA5[tg][scn] = Dict()
         end
     end
 
-    # 3. Save
+    # Read data
+    for scn in settings["NCA5_scenarios"]
+        println("   Scenario "*scn*"...")
+        fn = settings["dir_NCA5"]*"NCA5_"*scn*"_grid.nc"
+        for prc in settings["processes"]
+            NCA5_prc = convert.(Float32,ncread(fn,prc,start=[1,1,1,1],count=[-1,-1,9,-1]));
+            for tg in eachindex(local_projections)
+                local_NCA5[tg][scn][prc] = NCA5_prc[NCA5_loc[tg,1],NCA5_loc[tg,2],:,:]
+            end
+        end
+    end
+
+    # For each scenario, match 2020 value with trajectory for:
+    #  total
+    #  vlm
+    trajectory_idx = findfirst(settings["years"] .== years_NCA5[1])
+    for tg in eachindex(local_projections)
+        traj_value = local_projections[tg]["η_trajectory"][trajectory_idx,2]
+        for scn in settings["NCA5_scenarios"]
+            diff_value = local_NCA5[tg][scn]["total"][1,2] - traj_value
+            local_NCA5[tg][scn]["total"] .-= diff_value
+            local_NCA5[tg][scn]["verticallandmotion"] .-= diff_value
+        end
+    end
+    return local_NCA5,years_NCA5,pct_NCA5
+end
+
+function save_data(local_projections,local_NCA5, years_NCA5, pct_NCA5,settings)
     println("  Saving data...")
     station_names = Array{String}(undef,length(local_projections))
     station_coords = Array{Float32}(undef,length(local_projections),2)
@@ -81,13 +128,23 @@ function RunLocalProjections(settings)
     accels = Array{Float32}(undef,length(local_projections),3)
 
     scn_proj = Dict()
-    [scn_proj[scenario] = Array{Float32}(undef,length(local_projections),length(settings["years"]),3) for scenario ∈ settings["NCA5_scenarios"]]
+    for scn ∈ settings["NCA5_scenarios"]
+        scn_proj[scn] = Dict()
+        for prc in settings["processes"]
+            scn_proj[scn][prc] = Array{Float32}(undef,length(local_projections),length(settings["years"]),3)
+        end
+    end
+
     for tg ∈ eachindex(local_projections)
         station_names[tg] = local_projections[tg]["station_name"]
         station_coords[tg,:] = local_projections[tg]["station_coords"]
         η_tg[tg,:] = local_projections[tg]["η_tg"]
         η_trajectory[tg,:,:] = local_projections[tg]["η_trajectory"]
-        [scn_proj[scenario][tg,:,:] = local_projections[tg]["η_projection"][scenario] for scenario ∈ settings["NCA5_scenarios"]]
+        for scn ∈ settings["NCA5_scenarios"]
+            for prc in settings["processes"]
+                scn_proj[scn][prc][tg,:,:] = LinearInterpolation((years_NCA5, pct_NCA5), local_NCA5[tg][scn][prc],extrapolation_bc=NaN32)(settings["years"],pct_NCA5)
+            end
+        end
         trends[tg,:] = local_projections[tg]["trend"]
         accels[tg,:] = local_projections[tg]["accel"]
     end
@@ -108,9 +165,13 @@ function RunLocalProjections(settings)
     defVar(fh,"MSL_trend",trends,("tg","percentiles"),deflatelevel=5)
     defVar(fh,"MSL_accel",accels,("tg","percentiles"),deflatelevel=5)
     # Write scenarios
-    for scenario ∈ settings["NCA5_scenarios"]
-        defVar(fh,"MSL_"*scenario,scn_proj[scenario],("tg","years","percentiles",),deflatelevel=5)
+    for scn ∈ settings["NCA5_scenarios"]
+        for prc in settings["processes"]
+            defVar(fh,"MSL_"*prc*"_"*scn,scn_proj[scn][prc],("tg","years","percentiles",),deflatelevel=5)
+        end
     end
     close(fh)
+    return nothing
 end
+
 end

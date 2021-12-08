@@ -19,7 +19,6 @@ end
 
 function fig_1_gmsl_usa(settings)
     # Comparison of observed global-mean (Panel a) and Contiguous US (Panel b), Observed sea level, trajectory and scenarios
-    
     # Panel a: GMSL
     GMSL_20c = ncread(settings["fn_proj_glb"],"GMSL_20c")
     GMSL_Altimetry = ncread(settings["fn_proj_glb"],"GMSL_Altimetry")
@@ -41,7 +40,7 @@ function fig_1_gmsl_usa(settings)
     save_ts_unc_gmt(settings["years"],USA_trajectory./1000,settings["dir_fig_1_gmsl_usa"]*"USA_Trajectory.txt")
 
     for scenario ∈ settings["NCA5_scenarios"]
-        USA_scn = ncread(settings["fn_proj_reg"],"MSL_"*scenario)[1,:,:]
+        USA_scn = ncread(settings["fn_proj_reg"],"MSL_total_"*scenario)[1,:,:]
         save_ts_unc_gmt(settings["years"],USA_scn./1000,settings["dir_fig_1_gmsl_usa"]*"USA_"*scenario*".txt")
     end
     return nothing
@@ -58,7 +57,7 @@ function fig_2_regional(settings)
         save_ts_gmt(years,reg_rsl_alt./1000,settings["dir_fig_2_regional"]*region*"_Altimetry.txt")
         save_ts_unc_gmt(years,reg_trajectory./1000,settings["dir_fig_2_regional"]*region*"_Trajectory.txt")
         for scenario ∈ settings["NCA5_scenarios"]
-            reg_scn = ncread(settings["fn_proj_reg"],"MSL_"*scenario)[region_idx+1,:,:]
+            reg_scn = ncread(settings["fn_proj_reg"],"MSL_total_"*scenario)[region_idx+1,:,:]
             save_ts_unc_gmt(years,reg_scn./1000,settings["dir_fig_2_regional"]*region*"_"*scenario*".txt")
         end
     end
