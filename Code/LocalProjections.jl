@@ -1,8 +1,9 @@
-module LocalProjections
 # -------------------------------------------
 # Compute local extrapolation and projections
 # for individual tide-gauge locations
 # -------------------------------------------
+
+module LocalProjections
 using NetCDF
 using DelimitedFiles
 using Plots
@@ -18,10 +19,12 @@ include(dir_code*"ComputeRegionalObs.jl")
 include(dir_code*"RegionalProjections.jl")
 
 function RunLocalProjections(settings)
-    local_projections = ReadTGData(settings)
+    println("\nLocal trajectories and scenarios...")
+    tg_annual,local_projections = ReadTGData(settings)
     ExtrapolateLocalTrajectory!(local_projections,settings)
-    local_NCA5, years_NCA5, pct_NCA5 = ReadLocalProjections(local_projections,settings)
+    local_NCA5, years_NCA5, pct_NCA5 = ReadLocalProjections(tg_annual,local_projections,settings)
     save_data(local_projections,local_NCA5, years_NCA5, pct_NCA5,settings)
+    println("Local trajectories and scenarios done\n")
 end
 
 function ReadTGData(settings)
@@ -34,7 +37,7 @@ function ReadTGData(settings)
         local_projections[tg]["station_coords"] = tg_annual["station_coords"][tg,:]
         local_projections[tg]["η_tg"] = LinearInterpolation(tg_annual["years"], tg_annual["rsl"][tg,:],extrapolation_bc=NaN32)(settings["years"])
     end
-    return local_projections
+    return tg_annual,local_projections
 end
 
 function ExtrapolateLocalTrajectory!(local_projections,settings)
@@ -66,7 +69,7 @@ function ExtrapolateLocalTrajectory!(local_projections,settings)
     return nothing
 end
 
-function ReadLocalProjections(local_projections,settings)
+function ReadLocalProjections(tg_annual,local_projections,settings)
     # Locations and time
     fn = settings["dir_NCA5"]*"NCA5_Low_grid.nc"
     lon_NCA5 = ncread(fn,"lon")

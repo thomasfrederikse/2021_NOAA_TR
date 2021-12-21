@@ -1,11 +1,12 @@
-module RegionalProjections
 # --------------------------------------------
-# Process regiona; projections and observations
+# Process regional projections and observations
 # - Read TG estimates
 # - Estimate trend + acceleration using Hector
 # - Extrapolate data from tide gauges
 # - Read NCA5 projections
 # --------------------------------------------
+
+module RegionalProjections
 using NetCDF
 using DelimitedFiles
 using Plots
@@ -19,12 +20,12 @@ include(dir_code*"Masks.jl")
 include(dir_code*"Hector.jl")
 
 function RunRegionalProjections(settings)
-    println("Regional trajectories and scenarios...")
+    println("\nRegional trajectories and scenarios...")
     region_data = ReadVirstats(settings)
     ComputeRegionalTrajectory!(region_data,settings)
     NCA5_projections = ReadNCA5Regional(region_data,settings)
     SaveData(region_data,NCA5_projections,settings)
-    println("Regional trajectories and scenarios done")
+    println("Regional trajectories and scenarios done\n")
     return nothing
 end
 
@@ -39,6 +40,11 @@ function ReadVirstats(settings)
 end
 
 function ComputeRegionalTrajectory!(region_data,settings)
+    # -----------------------------------------------
+    # Compute the trajectory for regional sea level 
+    # and extrapolate
+    # -----------------------------------------------
+
     println("  Computing trajectories...")
     years_estimate = intersect(settings["years_trajectory"],settings["years_tg"])
     y_acc = findall(in(years_estimate),settings["years"])

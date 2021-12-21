@@ -1,3 +1,4 @@
+# Script to generate Figure 2.3
 ps=fig_2_regional.ps
 gmt set PS_MEDIA=Custom_16.0cx20.0c
 gmt set MAP_LABEL_OFFSET=3p
@@ -66,27 +67,27 @@ print_lines
 echo "1970 0.8 b)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
 region="GCE"
-gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWesn+t'Eastern Gulf Coast' -B$Bx -B$By+l'Sea level (m)'  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWesn+t'Eastern Gulf' -B$Bx -B$By+l'Sea level (m)'  >> $ps
 print_lines
 echo "1970 0.8 c)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
 region="GCW"
-gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Western Gulf Coast' -B$Bx -B$By  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Western Gulf' -B$Bx -B$By  >> $ps
 print_lines
 echo "1970 0.8 d)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
 region="SWC"
-gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWesn+t'Southwest Coast' -B$Bx -B$By+l'Sea level (m)'  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWesn+t'Southwest' -B$Bx -B$By+l'Sea level (m)'  >> $ps
 print_lines
 echo "1970 0.8 e)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
 region="NWC"
-gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Northwest Coast' -B$Bx -B$By  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Northwest' -B$Bx -B$By  >> $ps
 print_lines
 echo "1970 0.8 f)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
 region="PAC"
-gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWeSn+t'Pacific Islands' -B$Bx -B$By+l'Sea level (m)'  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWeSn+t'Hawaiian Islands' -B$Bx -B$By+l'Sea level (m)'  >> $ps
 print_lines
 echo "1970 0.8 g)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
@@ -94,15 +95,6 @@ region="CAR"
 gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Caribbean Islands' -B$Bx -B$By  >> $ps
 print_lines
 echo "1970 0.8 h)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
-
-# region="ALN"
-# gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-3.5c -BWeSn+t'Alaska North' -B$Bx -B$By+l'Sea level (m)'  >> $ps
-# print_lines
-
-# region="ALS"
-# gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Alaska South' -B$Bx -B$By  >> $ps
-# print_lines
-
 
 gmt psbasemap -O -K -R0/0.85/0.5/5.5 -JX6.8c/1.5c -X-3.8c -Y-2.05c -T100/100/1  >> $ps
 echo -e "0.0 5 \n 0.05 5" | gmt psxy -R -J -O -K -W1.5p,$color1 >> $ps

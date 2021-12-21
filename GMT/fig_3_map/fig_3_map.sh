@@ -1,3 +1,4 @@
+# Script to generate map with TG locations and regions (in appendix)
 ps=fig_3_map.ps
 gmt set PS_MEDIA=Custom_12.0cx10.3c
 gmt set MAP_LABEL_OFFSET=3p

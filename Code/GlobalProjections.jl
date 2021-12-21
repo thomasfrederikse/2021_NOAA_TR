@@ -17,20 +17,20 @@ using CSV
 dir_code = homedir()*"/Projects/2021_NOAA_TR/Code/"
 include(dir_code*"Hector.jl")
 function RunGlobalProjections(settings)
-    println("Global-mean observations and scenarios...")
+    println("\nGlobal-mean observations and scenarios...")
     GMSL_20c = read_GMSL_20c(settings)
     GMSL_Trajectory = compute_GMSL_trajectory(GMSL_20c,settings)
     GMSL_Altimetry = read_GMSL_Altimetry(settings)
     GMSL_NCA5 = read_NCA5(GMSL_Trajectory,settings)
     save_data(GMSL_20c,GMSL_Trajectory,GMSL_Altimetry,GMSL_NCA5,settings)
-    println("Global-mean observations and scenarios done")
+    println("Global-mean observations and scenarios done\n")
     return nothing
 end
 
 function read_GMSL_20c(settings)
     println("  Reading tide-gauge GMSL...")
     # Read F2020 GMSL
-    fh = Dataset(settings["fn_GMSL_20c"],"r")
+    fh = Dataset(settings["fn_gmsl_20c_ensembles"],"r")
     t = fh["time"][:]
     Λ = fh["likelihood"][:]
     η = fh["GMSL"][:]
@@ -60,9 +60,13 @@ function read_GMSL_20c(settings)
 end
 
 function compute_GMSL_trajectory(GMSL_20c,settings)
+    # -----------------------------------------------
+    # Compute the trajectory for GMSL and extrapolate
+    # -----------------------------------------------
     println("  Computing GMSL trajectories...")
     t_acc = findall(in(settings["years_trajectory"]),GMSL_20c["years"])
-    # Compute and extrapolate trend and acceleration
+
+    # Compute trend and acceleration in each of the ensemble members of F2020 GMSL
     amat = ones(length(t_acc),3)
     amat[:,2] = GMSL_20c["years"][t_acc] .- mean(GMSL_20c["years"][t_acc])
     @. amat[:,3] = 0.5 * (GMSL_20c["years"][t_acc] - $mean(GMSL_20c["years"][t_acc]))^2
@@ -73,14 +77,21 @@ function compute_GMSL_trajectory(GMSL_20c,settings)
     amat_expand[:,2] = settings["years_trajectory"] .- mean(GMSL_20c["years"][t_acc])
     @. amat_expand[:,3] = 0.5 * (settings["years_trajectory"] - $mean(GMSL_20c["years"][t_acc]))^2
     η_projected = zeros(length(settings["years_trajectory"]),length(GMSL_20c["Λ"]))
+
+    # Generate autocorrelated noise to account for uncertainties in the trajectory due to
+    # internal variability and add this to the ensemble members
     noise = Hector.GenerateNoise(GMSL_20c["years"][t_acc],GMSL_20c["η_mean"][t_acc,2],length(GMSL_20c["Λ"]),length(GMSL_20c["years"]);accel=true,model="Powerlaw");
     GMSL_20c["η"] .+= noise
+
+    # Compute trend and acceleration for each ens member, and compute trajectory
+    # time series: design matrix * solution
     for λ ∈ 1:length(GMSL_20c["Λ"])
         sol_arr[λ,:] = amat_sq * (amat_tr*GMSL_20c["η"][t_acc,λ])
         η_projected[:,λ] = amat_expand * sol_arr[λ,:]
     end
-    # Perturb estimated trend
-    # Projection mean and std
+
+    # Statistics: compute mean and confidence intervals
+    # of the extrapolated trajectory
     projection_mean = zeros(length(settings["years_trajectory"]),3)
     sidx = zeros(Int,length(GMSL_20c["Λ"]))
     𝚲    = zeros(Float64,length(GMSL_20c["Λ"]))
@@ -99,7 +110,7 @@ function compute_GMSL_trajectory(GMSL_20c,settings)
     GMSL_Trajectory["Λ"] = GMSL_20c["Λ"]
     GMSL_Trajectory["η"] = η_projected
 
-    # Get trend and acceleration
+    # Statistics: get trend and acceleration of trajectory
     GMSL_Trajectory["trend"] = zeros(Float32,3)
     sidx = sortperm(sol_arr[:,2])
     𝚲 = cumsum(GMSL_20c["Λ"][sidx])
@@ -125,8 +136,8 @@ function read_GMSL_Altimetry(settings)
     GMSL_Altimetry = Dict()
     GMSL_Altimetry["years"] = [1993:2020...]
       # Read data
-    GSFC_raw = readdlm(settings["fn_GMSL_GSFC"],skipstart=48)[:,[3,12]]
-    ENSO_raw = matread(settings["fn_GMSL_ENSO"])
+    GSFC_raw = readdlm(settings["fn_gmsl_altimetry_GSFC"],skipstart=48)[:,[3,12]]
+    ENSO_raw = matread(settings["fn_gmsl_ENSO"])
     # To monthly-mean GMSL 
     tbounds = zeros(length(ENSO_raw["time"]),2)
     tbounds[:,1] = [1993.0:1/12:2021-1/12...]

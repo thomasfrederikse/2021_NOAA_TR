@@ -1,3 +1,4 @@
+# This script creates Figure 2.6
 ps=fig_5_divergence.ps
 gmt set PS_MEDIA=Custom_16.0cx7c
 gmt set MAP_LABEL_OFFSET=3p
@@ -65,7 +66,7 @@ gmt psxy div_p_IntHigh.txt -R -J -O -K -Sc0.2c -G$colorinthigh >> $ps
 gmt psxy div_p_High.txt -R -J -O -K -Sc0.2c -G$colorhigh >> $ps
 echo "2000 2.05 a)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
-gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Projection divergence from Intermediate' -B$Bx -B$By  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Scenario divergence from Intermediate' -B$Bx -B$By  >> $ps
 gmt set PS_LINE_CAP=round
 gmt psxy  -R -J -N -W1.0p,$colorlow,1_2 -O -K div_l_Int_Low.txt   >> $ps
 gmt psxy  -R -J -N -W1.0p,$colorintlow,1_2 -O -K div_l_Int_IntLow.txt   >> $ps

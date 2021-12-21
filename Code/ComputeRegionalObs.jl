@@ -1,7 +1,9 @@
-module ComputeRegionalObs
+# --------------------------------------------------------------------
 # Run a simple virtual-station average for US tide-gauge observations
-# Read altimetry
+# Read altimetry observations
 # Provide annual-mean reconstruction
+# --------------------------------------------------------------------
+module ComputeRegionalObs
 using NCDatasets
 using NetCDF
 using XLSX
@@ -13,7 +15,7 @@ dir_code = homedir()*"/Projects/2021_NOAA_TR/Code/"
 include(dir_code*"Masks.jl")
 
 function RunComputeRegionalObs(settings)
-    println("Regional observations...")
+    println("\nRegional observations...")
     tg_monthly = ReadTGData(settings)
     tg_annual = ConvertMonthlyToAnnual(tg_monthly,settings)
     region_data = MapToRegions(tg_annual,settings)
@@ -22,18 +24,21 @@ function RunComputeRegionalObs(settings)
     ReadAltimetry!(region_data,settings)
     SaveData(region_data,settings)
     SaveGridGMT(region_data, settings)
-    println("Regional observations done")
+    println("Regional observations done\n")
     return nothing
 end
 
 function ReadTGData(settings)
+    # --------------------------------------------------
+    # Read the monthly tide-gauge data provided by Billy
+    # Returns monthly-mean sea level in mm
+    # --------------------------------------------------
     println("  Reading tide-gauge data...")
-    # Read the monthly tide-gauge data
     tg_monthly = Dict()
     data_raw = XLSX.readxlsx(settings["fn_tg_data"])["monthly MSL"][:]
     tg_monthly["station_names"] = Vector{String}(data_raw[1,2:122])
     tg_monthly["station_coords"] = reverse!(Array{Float32}(data_raw[2:3,2:122]'),dims=2)
-    @. tg_monthly["station_coords"][tg_monthly["station_coords"][:,1]<0,1] += 360  # Longitudes [0-360]
+    @. tg_monthly["station_coords"][tg_monthly["station_coords"][:,1]<0,1] += 360  # Longitudes should cover [0-360]
     tval = data_raw[4:end,1]
     tvec = zeros(Int,length(tval),2)
     for t ∈ 1:length(tval)
@@ -48,6 +53,7 @@ function ReadTGData(settings)
     @. rsl_raw[rsl_raw=="NaN"] = NaN
     tg_monthly["rsl"] = Array{Float32}(rsl_raw')
     tg_monthly["rsl"] .*= 1000.0f0
+
     # Remove Seward because of jump
     stat_acc = ones(Bool,size(tg_monthly["rsl"],1))
     stat_acc[107] = false
@@ -58,8 +64,14 @@ function ReadTGData(settings)
 end
 
 function ConvertMonthlyToAnnual(tg_monthly,settings)
+    # ------------------------------------------------------------
+    # Compute annual-mean sea level from monthly-mean sea level
+    # - First remove mean seasonal cycle, which would give trouble
+    #   for years with missing months
+    # - For years with at least 10 months with data, compute
+    #   annual mean. Otherwise, NaN32
+    # ------------------------------------------------------------
     println("  Converting tide-gauge data to annual-means...")
-    # Convert monthly-mean sea level to annual and remove small gaps
     tg_annual = Dict()
     tg_annual["years"] = settings["years_tg"]
     tg_annual["station_names"] = tg_monthly["station_names"]
@@ -91,8 +103,10 @@ function ConvertMonthlyToAnnual(tg_monthly,settings)
 end
 
 function MapToRegions(tg_annual,settings)
+    # --------------------------------------------------------------
+    # Map the individual tide-gauge records to one of the 10 regions
+    # --------------------------------------------------------------
     println("  Mapping stations onto regions...")
-    # Find out which tide gauges belong to the regions
     mask = Masks.ReadMask(settings)
     region_num = zeros(Bool,length(settings["regions"]),size(tg_annual["station_coords"],1))
     
@@ -136,9 +150,22 @@ function MapToRegions(tg_annual,settings)
 end
 
 function MergeVirstat!(region_data,settings)
-    println("  Merge stations into regional means using virtual-station approach...")
+    # ------------------------------------------------------------------------------------------------
     # Merge the tide gauges in each region to an average curve using the
-    # D2017 virtual station method
+    # Dangendorf et al. (2017) virtual station method:
+    # Iteratively find the two nearest stations, subtract local mean sea level
+    # over the years where both stations have data from both stations. Then take
+    # the average RSL of both stations. Remove these two stations from the list,
+    # but add a new one with the averaged sea-level curve halfway both stations.
+    # Repeat this procedure until only one virtual station is left. The resulting
+    # curve is the estimate of regional sea level.
+    #
+    # For more details, see:
+    #  Dangendorf, S., Marcos, M., Wöppelmann, G., Conrad, C. P., Frederikse, T., & Riva, R. (2017). 
+    #  Reassessment of 20th century global mean sea level rise. Proceedings of the National Academy 
+    #  of Sciences, 114(23), 5946–5951. https://doi.org/10.1073/pnas.1616007114
+    # ------------------------------------------------------------------------------------------------
+    println("  Merge stations into regional means using virtual-station approach...")
     idx_baseline = findall(in(settings["years_baseline"]),settings["years_tg"])
     for region ∈ settings["regions"]
         rsl_reg = copy(region_data[region]["rsl"])
@@ -146,8 +173,8 @@ function MergeVirstat!(region_data,settings)
         while size(loc_reg,1) > 1
             # Find two nearest stations
             merge_idx, ϕ_mid, θ_mid = FindStatsToMerge(rsl_reg,loc_reg)
-            # Merge two stations
             merge_data = rsl_reg[[merge_idx[1],merge_idx[2]],:]
+            # Subtract the mean over the overlap period
             ovl = @. isfinite(merge_data[1,:]) & isfinite(merge_data[2,:])
             merge_data[1,:] .-= mean(merge_data[1,ovl])
             merge_data[2,:] .-= mean(merge_data[2,ovl])
@@ -166,32 +193,37 @@ function MergeVirstat!(region_data,settings)
     return nothing
 end
 
+
 function ReadAltimetry!(region_data,settings)
+    # ------------------------------------------------------------------
+    # Read satellite altimetry and add GIA and GRD corrections to obtain
+    # relative sea level, which is comparable to tide-gauge observations
+    # ------------------------------------------------------------------
     println("  Reading altimetry...")
-    # Read satellite altimetry (AVISO) and add GIA and GRD correctiosn
     mask = Masks.ReadMask(settings) 
     area = ComputeGridArea(mask["ϕ"],mask["θ"])
     clim_indices = ReadClimIndices(settings)
-    # 1 Read altimetry data
+
+    # Read altimetry data
     ssh_grid = convert.(Float32,ncread(settings["fn_altimetry"],"ssh"))
     @. ssh_grid[ssh_grid > 31000] = 0
     @. ssh_grid .*= 0.05
     alt_time = convert.(Float32,ncread(settings["fn_altimetry"],"time"))
     alt_year = [1993:2019...]
-    # To annual-means
+    # From high frquency data to annual-means
     ssh_grid_year = zeros(Float32,size(ssh_grid,1),size(ssh_grid,2),length(alt_year));
     for (idx,yr) ∈ enumerate(alt_year)
         acc_idx = floor.(alt_time) .== yr
         ssh_grid_year[:,:,idx] = mean(ssh_grid[:,:,acc_idx],dims=3)
     end
 
-    # 2 Take regional average and remove seasonal cycle, NAO, PDO and ENSO
+    # Take regional average and remove NAO, PDO and ENSO effects using
+    # ordinary least squares
     amat = ones(size(alt_year,1),5);
     amat[:,2] = alt_year .- mean(alt_year);
     amat[:,3] = LinearInterpolation(clim_indices[1]["years"], clim_indices[1]["index"],extrapolation_bc=Line())(alt_year)
     amat[:,4] = LinearInterpolation(clim_indices[2]["years"], clim_indices[2]["index"],extrapolation_bc=Line())(alt_year)
     amat[:,5] = LinearInterpolation(clim_indices[3]["years"], clim_indices[3]["index"],extrapolation_bc=Line())(alt_year)
-    
     for region ∈ settings["regions"]
         ssh_reg_raw = sum( @.(ssh_grid_year * mask[region] * area),dims=(1,2))[:] ./ sum(mask[region] .* area)
         sol = amat\ssh_reg_raw
@@ -200,13 +232,13 @@ function ReadAltimetry!(region_data,settings)
     end
 
     # 3 Add GIA and contemporary GRD
-    GIA = ComputeGIA(mask,area,settings)
-    GRD = ComputeGRD(mask,area,alt_year,settings)
+    GIA = ComputeGIA(mask,area,settings) # GIA from Caron et al. (2019)
+    GRD = ComputeGRD(mask,area,alt_year,settings) # Contemporary GRD effects from Frederikse e al. (2020)
     for (region_idx,region) ∈ enumerate(settings["regions"])
         region_data[region]["rsl_alt"] = region_data[region]["gsl_alt"] - (GIA[region_idx] .* (alt_year .- mean(alt_year))) - GRD[:,region_idx]
     end
 
-    # Baseline
+    # Adjust baseline of all observations
     idx_baseline = findall(in(settings["years_baseline"]),alt_year)
     for region ∈ settings["regions"]
         region_data[region]["rsl_alt"] .-= mean(region_data[region]["rsl_alt"][idx_baseline])
@@ -217,6 +249,12 @@ function ReadAltimetry!(region_data,settings)
 end
 
 function ComputeGIA(mask,area,settings)
+    # --------------------------------------------------------------------------------------
+    # Read GIA solid-Earth deformation from:
+    # Caron, L., Ivins, E. R., Larour, E., Adhikari, S., Nilsson, J., & Blewitt, G. (2018). 
+    # GIA Model Statistics for GRACE Hydrology, Cryosphere, and Ocean Science. 
+    # Geophysical Research Letters, 45(5), 2203–2212. https://doi.org/10.1002/2017GL076644
+    # --------------------------------------------------------------------------------------
     println("  Reading GIA...")
     GIA = zeros(Float32,length(settings["regions"]))
     GIA_rad = ncread(settings["fn_GIA"],"rad_mean")
@@ -227,6 +265,13 @@ function ComputeGIA(mask,area,settings)
 end
 
 function ComputeGRD(mask,area,years,settings)
+    # --------------------------------------------------------------------------------------
+    # Read GRD solid-Earth deformation from:
+    # Frederikse, T., Landerer, F., Caron, L., Adhikari, S., Parkes, D., Humphrey, V. W., 
+    # Dangendorf, S., Hogarth, P., Zanna, L., Cheng, L., & Wu, Y.-H. (2020). 
+    # The causes of sea-level rise since 1900. 
+    # Nature, 584(7821), 393–397. https://doi.org/10.1038/s41586-020-2591-3
+    # --------------------------------------------------------------------------------------
     println("  Reading contemporary GRD...")
     GRD = zeros(Float32,length(years),length(settings["regions"]))
     GRD_rad = ncread(settings["fn_GRD"],"rad") .* 0.05
@@ -239,6 +284,10 @@ function ComputeGRD(mask,area,years,settings)
 end
 
 function RemoveClimVar!(region_data,settings)
+    # -------------------------------------------------------------------
+    # For each region remove the effects of climate indices (NAO/PDO/MEI)
+    # from observed sea level using OLS. 
+    # -------------------------------------------------------------------
     clim_indices = ReadClimIndices(settings)
     for region ∈ settings["regions"]
         region_data[region]["rsl_virstat_novar"] = RemoveVariability(settings["years_tg"],region_data[region]["rsl_virstat"],clim_indices,settings)
@@ -265,7 +314,13 @@ function RemoveVariability(years,tseries,clim_indices,settings)
 end
 
 function ReadClimIndices(settings)
+    # ---------------------------------------------------------------
     # Read climate indices used for removing natural variability
+    # All indices come from NOAA Physical Sciences Laboratory (PSL)
+    # https://psl.noaa.gov/data/climateindices/
+    # and NOAA Climate Prediction Centre (CPC)
+    # https://www.cpc.ncep.noaa.gov/data/teledoc/telecontents.shtml
+    # ---------------------------------------------------------------
     clim_indices = Array{Dict}(undef,3)
     [clim_indices[i] = Dict() for i ∈ 1:3]
 

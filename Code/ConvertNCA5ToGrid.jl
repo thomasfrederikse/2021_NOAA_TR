@@ -1,10 +1,15 @@
-# ----------------------------------------------------------
-# Read all the NCA5 mess and reformat to a file thats usable
-# to repair the FACTS mess
-# ---
-# All heights in mm
-# ----------------------------------------------------------
+# ---------------------------------------------------------------
+# Read all the NCA5 files and reformat them to a file 
+# thats usable throughout the report. All heights in mm
+# 
+# For each scenario, the following files are made:
+#   NCA5_scn_gmsl.nc: Global-mean sea level for each scenario
+#   NCA5_scn_grid.nc: Local sea level on a 1° grid
+#   NCA5_scn_tg.nc: Local sea level at PSMSL tide-gauge locations
+# This script only has to be run once.
+# ---------------------------------------------------------------
 module ConvertNCA5ToGrid
+
 using NetCDF
 using DelimitedFiles
 using Statistics
@@ -13,10 +18,14 @@ using Interpolations
 using DelimitedFiles
 
 function RunConvertNCA5ToGrid(settings)
+    println("\nProcessing NCA5 scenarios...")
     ConvertGMSL(settings)
+    println("  Processing gridded and tide-gauge scenarios...")
     for scn ∈ 1:length(settings["NCA5_scenarios"])
         ConvertIndivScn(scn,settings)
     end
+    println("  Processing gridded and tide-gauge scenarios done")
+    println("Processing NCA5 scenarios done\n")
     return nothing
 end
 
@@ -27,7 +36,7 @@ function ConvertGMSL(settings)
     # Save as netcdf
     # Currently, I don't have the GMSL components
     # -------------------------------------------
-    println("Processing GMSL...")
+    println("  Processing GMSL done")
     fn_in = settings["dir_NCA5_raw"]*"NCA5_GMSL.csv"
     data_raw = readdlm(fn_in,',',skipstart=1)
     traw = [2020, 2030, 2040, 2050, 2060, 2070, 2080, 2090, 2100, 2110, 2120,2130,2140, 2150, 2200, 2250, 2300]
@@ -48,7 +57,7 @@ function ConvertGMSL(settings)
         defVar(fh,"total",trunc.(Int16,gmsl[scn]),("years","percentiles",),deflatelevel=6)
         close(fh)
     end
-    println("Processing GMSL done")
+    println("  Processing GMSL done")
 end
 
 function ConvertIndivScn(scn,settings)
@@ -57,7 +66,7 @@ function ConvertIndivScn(scn,settings)
     # Save lat/lon grid and tide-gauge values in
     # individual files
     # -------------------------------------------
-    println("Scenario "*settings["NCA5_scenarios"][scn]*"...")
+    println("   Scenario "*settings["NCA5_scenarios"][scn]*"...")
     scn_grid = Dict()
     scn_tg   = Dict()
     scenario_target = [30,50,100,150,200,250]
@@ -67,9 +76,9 @@ function ConvertIndivScn(scn,settings)
     quantiles_raw = ncread(fn,"quantiles")
     idx_low = findfirst(quantiles_raw.>0.1699)
     idx_med = findfirst(quantiles_raw.>0.4999)
-    idx_high = findfirst(quantiles_raw.>0.9499)
-    scn_grid["quantiles"] = [0.17,0.50,0.83]
-    scn_tg["quantiles"] = [0.17,0.50,0.83]
+    idx_high = findfirst(quantiles_raw.>0.8299)
+    scn_grid["quantiles"] = quantiles_raw[[idx_low,idx_med,idx_high]]
+    scn_tg["quantiles"] = quantiles_raw[[idx_low,idx_med,idx_high]]
     scn_grid["years"] = ncread(fn,"years")
     scn_tg["years"] = ncread(fn,"years")
     acc_loc_grid = ncread(fn,"locations") .> 4000
@@ -86,7 +95,7 @@ function ConvertIndivScn(scn,settings)
 
     # Read individual fields
     for process ∈ settings["processes"]
-        println("  Reading "*process)
+        println("   Reading "*process)
         fn = settings["dir_NCA5_raw"] * "gmsl"*lpad(scenario_target[scn],3,"0")*"/"*process*"_gmsl"*lpad(scenario_target[scn],3,"0")*".nc"
         if (process == "landwaterstorage") || (process == "verticallandmotion")
             scn_grid[process] = reshape(ncread(fn,"sea_level_change",start=[findfirst(acc_loc_grid),2,1],count=[-1,-1,-1])[:,:,[idx_low,idx_med,idx_high]],(360,181,length(scn_grid["years"]),3));
@@ -100,8 +109,9 @@ function ConvertIndivScn(scn,settings)
         reverse!(scn_grid[process],dims=2);
     end
 
-    # Estimate climate-related scenarios
-    println("  Summing climate-related fields...")
+    # Estimate climate-driven sea-level changes (ice, sterodynamic, land water storage, but not VLM)
+    # Assume errors are independent, so they're added in quadrature
+    println("   Summing climate-related fields...")
 
     scn_grid["total_climate"] = zeros(Float32,size(scn_grid["total"]))
     scn_tg["total_climate"] = zeros(Float32,size(scn_tg["total"]))
@@ -118,7 +128,7 @@ function ConvertIndivScn(scn,settings)
     @. scn_tg["total_climate"][:,:,1] = scn_tg["total_climate"][:,:,2] - sqrt(@. scn_tg["total_climate"][:,:,1])
     @. scn_tg["total_climate"][:,:,3] = scn_tg["total_climate"][:,:,2] + sqrt(@. scn_tg["total_climate"][:,:,3])
 
-    # Fix NaN
+    # Fix NaNs
     @. scn_grid["total_climate"][scn_grid["total_climate"]<-32000] = -32000 
     @. scn_grid["total_climate"][scn_grid["total_climate"]>32000] = -32000 
     @. scn_tg["total_climate"][scn_tg["total_climate"]<-32000] = -32000 
@@ -131,7 +141,7 @@ function ConvertIndivScn(scn,settings)
     end
 
     # Save scenario file
-    println("  Saving")
+    println("   Saving")
     fn_grid_out = settings["dir_NCA5"] * "NCA5_"*settings["NCA5_scenarios"][scn]*"_grid.nc"
     fn_tg_out   = settings["dir_NCA5"] * "NCA5_"*settings["NCA5_scenarios"][scn]*"_tg.nc"
 
@@ -164,7 +174,7 @@ function ConvertIndivScn(scn,settings)
     end
     defVar(fh,"total_climate",trunc.(Int16,scn_tg["total_climate"]),("loc","years","percentiles",),deflatelevel=6)
     close(fh)
-    println("Scenario "*settings["NCA5_scenarios"][scn]*" done")
+    println("   Scenario "*settings["NCA5_scenarios"][scn]*" done")
     return nothing
 end
 

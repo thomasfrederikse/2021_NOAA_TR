@@ -1,3 +1,5 @@
+# Script to generate Figure 1.2
+
 ps=fig_4_gmsl.ps
 gmt set PS_MEDIA=Custom_16.0cx7c
 gmt set MAP_LABEL_OFFSET=3p

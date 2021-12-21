@@ -1,4 +1,13 @@
-# Run all the code for the NOAA TR
+# -------------------------------------------------------------------------------------------------
+# Interagency technical report "Global and Regional Sea Level Rise Scenarios for the United States: 
+# Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines" 
+# 
+# This script calls all the routines to compute and analyze the projections, trajectories and 
+# observations. All results are stored in netCDF files. This script also stores the results for
+# some of the figures in the report as text files, which can be read by the GMT scripts used
+# to make these figures.
+# -------------------------------------------------------------------------------------------------
+
 dir_code = homedir()*"/Projects/2021_NOAA_TR/Code/"
 include(dir_code*"ConvertNCA5ToGrid.jl")
 include(dir_code*"Masks.jl")
@@ -10,7 +19,7 @@ include(dir_code*"SaveFigureData.jl")
 
 function main()
     settings = DefSettings()
-    ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Only needed once
+    # ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Not needed to run: converted files are present
     ComputeRegionalObs.RunComputeRegionalObs(settings)
     GlobalProjections.RunGlobalProjections(settings)
     RegionalProjections.RunRegionalProjections(settings)
@@ -24,35 +33,30 @@ function DefSettings()
     settings["dir_project"] = homedir()*"/Projects/2021_NOAA_TR/"
 
     # File names
-    settings["fn_region_mask"] = settings["dir_project"]*"Data/region_mask.nc"
-    settings["fn_basin_codes"] = settings["dir_project"]*"Data/basin_codes.nc"
-    settings["fn_bathymetry"] = settings["dir_project"]*"Data/GEBCO_bathymetry_05.nc"
+    settings["fn_region_mask"] = settings["dir_project"] * "Data/region_mask.nc"
+    settings["fn_basin_codes"] = settings["dir_project"] * "Data/basin_codes.nc"
+    settings["fn_bathymetry"]  = settings["dir_project"] * "Data/GEBCO_bathymetry_05.nc"
 
     # Observed sea level
-    settings["fn_tg_data"] = settings["dir_project"]*"Data/US_tg_monthly.xlsx" 
-    settings["fn_GMSL_20c"] = settings["dir_project"]* "Data/GMSL_ensembles.nc" 
-    settings["fn_GMSL_GSFC"] = settings["dir_project"]*"Data/GMSL_TPJAOS_5.0_199209_202106.txt"
+    settings["fn_tg_data"]             = settings["dir_project"] * "Data/US_tg_monthly.xlsx" 
+    settings["fn_gmsl_20c_ensembles"]  = settings["dir_project"] * "Data/GMSL_ensembles.nc" 
+    settings["fn_gmsl_20c_mean"]       = settings["dir_project"] * "Data/global_timeseries_measures.nc"
+    settings["fn_gmsl_altimetry_GSFC"] = settings["dir_project"] * "Data/GMSL_TPJAOS_5.0_199209_202106.txt"
+    settings["fn_GIA"]                 = settings["dir_project"] * "Data/GIA_Caron_stats_05.nc"
+    settings["fn_altimetry"]           = settings["dir_project"] * "Data/CDS_monthly_1993_2019.nc"
+    settings["fn_GRD"]                 = settings["dir_project"] * "Data/grd_1992_2020.nc"
 
-    # Altimetry and GMSL
-    settings["fn_gmsl_20c"] = settings["dir_project"]*"Data/global_timeseries_measures.nc"
-    settings["fn_GIA"] = settings["dir_project"]*"Data/GIA_Caron_stats_05.nc"
-    settings["fn_altimetry"] = settings["dir_project"]*"Data/CDS_monthly_1993_2019.nc"
-    settings["fn_GRD"] = settings["dir_project"]*"Data/grd_1992_2020.nc"
-
-    # Indices
+    # Climate indices
+    settings["fn_gmsl_ENSO"] = settings["dir_project"]*"Data/ClimIdx/enso_correction.mat"
     settings["fn_NAO"] = settings["dir_project"]*"Data/ClimIdx/nao_pc_monthly.txt" 
     settings["fn_PDO"] = settings["dir_project"]*"Data/ClimIdx/pdo.txt" 
     settings["fn_MEI_1"] = settings["dir_project"]*"Data/ClimIdx/MEIext.data" 
     settings["fn_MEI_2"] = settings["dir_project"]*"Data/ClimIdx/meiv2.data" 
-    settings["fn_GMSL_ENSO"] = settings["dir_project"]*"Data/enso_correction.mat"
     
     # NCA5 projections
     settings["dir_NCA5_raw"] = homedir() * "/Data/NCA5/"
     settings["dir_NCA5"] =settings["dir_project"]*"Data/NCA5_projections/"
 
-
-    # settings["fn_GMSL_NCA5"] = settings["dir_project"]*"Data/NCA5_RSL_projections_vlm_gmsl.nc" 
-    # settings["fn_grid_NCA5"] = settings["dir_project"]*"Data/NCA5_RSL_projections_vlm_grid.nc" 
     # Files to save the NOAA projections
     settings["fn_proj_glb"] = settings["dir_project"]*"Data/NOAA_TR_global_projections.nc" 
     settings["fn_proj_reg"] = settings["dir_project"]*"Data/NOAA_TR_regional_projections.nc" 
@@ -80,3 +84,5 @@ function DefSettings()
     settings["dir_fig_5_divergence"] = settings["dir_gmt"]*"fig_5_divergence/" 
     return settings
 end
+
+main()

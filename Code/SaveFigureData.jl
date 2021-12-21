@@ -1,13 +1,13 @@
+# ---------------------------------------------------
+# Save the data for the figures in Chapter 2
+# The figures themselves are created 
+# from GMT scripts in the ./GMT/ directory
+# ---------------------------------------------------
 module SaveFigureData
 
 using NetCDF
 using DelimitedFiles
 using Statistics
-# ---------------------------------------------------
-# Save the data for the figures 
-# The figures themselves are created 
-# from GMT scripts
-# ---------------------------------------------------]
 function RunSaveFigureData(settings)
     println("Saving figure data...")
     fig_1_gmsl_usa(settings)
@@ -162,16 +162,16 @@ end
 # General functions
 # -----------------
 function read_gmsl_var!(varname,store,settings)
-    store[:,1] = ncread(settings["fn_gmsl_20c"],varname*"_lower")
-    store[:,2] = ncread(settings["fn_gmsl_20c"],varname*"_mean")
-    store[:,3] = ncread(settings["fn_gmsl_20c"],varname*"_upper")
+    store[:,1] = ncread(settings["fn_gmsl_20c_mean"],varname*"_lower")
+    store[:,2] = ncread(settings["fn_gmsl_20c_mean"],varname*"_mean")
+    store[:,3] = ncread(settings["fn_gmsl_20c_mean"],varname*"_upper")
     return nothing
 end
 
 function read_gmsl_var2!(varname,store,settings)
-    store[:,1] = ncread(settings["fn_gmsl_20c"],varname*"_lower")
-    store[:,2] = ncread(settings["fn_gmsl_20c"],varname)
-    store[:,3] = ncread(settings["fn_gmsl_20c"],varname*"_upper")
+    store[:,1] = ncread(settings["fn_gmsl_20c_mean"],varname*"_lower")
+    store[:,2] = ncread(settings["fn_gmsl_20c_mean"],varname)
+    store[:,3] = ncread(settings["fn_gmsl_20c_mean"],varname*"_upper")
     return nothing
 end
 

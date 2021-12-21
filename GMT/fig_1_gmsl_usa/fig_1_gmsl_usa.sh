@@ -1,3 +1,4 @@
+# This script creates Figure 2.2
 ps=fig_1_gmsl_usa.ps
 gmt set PS_MEDIA=Custom_16.0cx7c
 gmt set MAP_LABEL_OFFSET=3p
