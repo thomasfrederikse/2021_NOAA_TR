@@ -18,7 +18,7 @@ The folder contains the following files:
 - `GlobalProjections.jl`: Reads and processes the GMSL observations and projections, and computes the trajectory
 - `RegionalProjections.jl`: Reads and processes the regional projections and computes the trajectories
 - `LocalProjections.jl`: Reads and processes the local projections at the tide-gauge locations and computes the trajectories
-- `LocalProjections.jl`: Reads and processes the local projections at the tide-gauge locations and computes the trajectories
+- `SaveFigureData.jl`: Reads the results and writes text files for GMT
 - `Hector.jl`: Wrapper for [Hector](http://segal.ubi.pt/hector/), used to compute trends and uncertainties.
 - `Masks.jl`: Defines the region masks for each region.
 
@@ -47,8 +47,8 @@ The following input data has been included for the analysis. Please appropriatel
 
 #### Output data
 - `NOAA_TR_global_projections.nc`: GMSL projections, trajectory, and observations for the report
-- `NOAA_TR_regional_projections.nc`: Regional projections and trajectories for the report
-- `NOAA_TR_regional_obs.nc`: Regional observations for the report
+- `NOAA_TR_regional_projections.nc`: Regional observations, projections and trajectories for the report
+- `NOAA_TR_local_projections.nc`: Local observations, projections and trajectories for the report
 
 To read the NetCDF files, many free software is available, including [ncview](http://meteora.ucsd.edu/~pierce/ncview_home_page.html) and [Panoply](https://www.giss.nasa.gov/tools/panoply/). NetCDF packages are available for Julia and Python as well to directly import the data. 
 
