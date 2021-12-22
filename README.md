@@ -14,9 +14,10 @@ Run `run_NOAA_tr.jl` in the REPL or run `julia run_NOAA_tr.jl` from the command 
 The folder contains the following files:
 - `run_NOAA_tr.jl`: This is the main routine that (eventually) calls all the functions to compute the projections.
 - `ConvertNCA5ToGrid.jl`: Converts the original NCA5 projections to a set of netCDF files that's used throughout this code
-- `ComputeRegionalObs.jl`: Reads and processes the regional observations
+- `ProcessObservations.jl`: Reads and processes the tide-gauge and altimetry observations
 - `GlobalProjections.jl`: Reads and processes the GMSL observations and projections, and computes the trajectory
 - `RegionalProjections.jl`: Reads and processes the regional projections and computes the trajectories
+- `LocalProjections.jl`: Reads and processes the local projections at the tide-gauge locations and computes the trajectories
 - `LocalProjections.jl`: Reads and processes the local projections at the tide-gauge locations and computes the trajectories
 - `Hector.jl`: Wrapper for [Hector](http://segal.ubi.pt/hector/), used to compute trends and uncertainties.
 - `Masks.jl`: Defines the region masks for each region.
