@@ -11,7 +11,6 @@
 dir_code = homedir()*"/Projects/2021_NOAA_TR/Code/"
 include(dir_code*"ConvertNCA5ToGrid.jl")
 include(dir_code*"Masks.jl")
-include(dir_code*"ComputeRegionalObs.jl")
 include(dir_code*"GlobalProjections.jl")
 include(dir_code*"RegionalProjections.jl")
 include(dir_code*"LocalProjections.jl")
@@ -20,7 +19,6 @@ include(dir_code*"SaveFigureData.jl")
 function main()
     settings = DefSettings()
     # ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Not needed to run: converted files are present
-    ComputeRegionalObs.RunComputeRegionalObs(settings)
     GlobalProjections.RunGlobalProjections(settings)
     RegionalProjections.RunRegionalProjections(settings)
     LocalProjections.RunLocalProjections(settings)
@@ -43,7 +41,7 @@ function DefSettings()
     settings["fn_gmsl_20c_mean"]       = settings["dir_project"] * "Data/global_timeseries_measures.nc"
     settings["fn_gmsl_altimetry_GSFC"] = settings["dir_project"] * "Data/GMSL_TPJAOS_5.0_199209_202106.txt"
     settings["fn_GIA"]                 = settings["dir_project"] * "Data/GIA_Caron_stats_05.nc"
-    settings["fn_altimetry"]           = settings["dir_project"] * "Data/CDS_monthly_1993_2019.nc"
+    settings["fn_altimetry"]           = settings["dir_project"] * "Data/CDS_monthly_1993_2020.nc"
     settings["fn_GRD"]                 = settings["dir_project"] * "Data/grd_1992_2020.nc"
 
     # Climate indices
@@ -61,7 +59,6 @@ function DefSettings()
     settings["fn_proj_glb"] = settings["dir_project"]*"Data/NOAA_TR_global_projections.nc" 
     settings["fn_proj_reg"] = settings["dir_project"]*"Data/NOAA_TR_regional_projections.nc" 
     settings["fn_proj_lcl"] = settings["dir_project"]*"Data/NOAA_TR_local_projections.nc" 
-    settings["fn_regional_obs"] = settings["dir_project"]* "Data/NOAA_TR_regional_obs.nc"   
 
     # Scenarios
     settings["NCA5_scenarios"]  = ["Low","IntLow","Int","IntHigh","High"]
@@ -72,7 +69,7 @@ function DefSettings()
     # Trajectory years
     settings["years_trajectory"] = [1970:2200...]
     settings["years_tg"] = [1920:2020...]
-    settings["years_baseline"] = [1999:2001...]
+    settings["years_baseline"] = [2000]
     settings["years"] = [1900:2200...]
 
     # Figure directories

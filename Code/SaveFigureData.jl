@@ -32,15 +32,15 @@ function fig_1_gmsl_usa(settings)
     end
 
     # Panel b: Contiguous US
-    USA_20c = ncread(settings["fn_regional_obs"],"USA_tg")
-    USA_rsl_alt = ncread(settings["fn_regional_obs"],"USA_rsl_alt")
-    USA_trajectory = ncread(settings["fn_proj_reg"],"MSL_Trajectory")[1,:,:]
-    save_ts_gmt(settings["years"],USA_20c./1000,settings["dir_fig_1_gmsl_usa"]*"USA_20c.txt")
-    save_ts_gmt(settings["years"],USA_rsl_alt./1000,settings["dir_fig_1_gmsl_usa"]*"USA_Altimetry.txt")
+    USA_rsl = ncread(settings["fn_proj_reg"],"rsl_obs")[1,:]
+    USA_alt = ncread(settings["fn_proj_reg"],"alt_obs")[1,:]
+    USA_trajectory = ncread(settings["fn_proj_reg"],"rsl_trajectory")[1,:,:]
+    save_ts_gmt(settings["years"],USA_rsl./1000,settings["dir_fig_1_gmsl_usa"]*"USA_20c.txt")
+    save_ts_gmt(settings["years"],USA_alt./1000,settings["dir_fig_1_gmsl_usa"]*"USA_Altimetry.txt")
     save_ts_unc_gmt(settings["years"],USA_trajectory./1000,settings["dir_fig_1_gmsl_usa"]*"USA_Trajectory.txt")
 
     for scenario ∈ settings["NCA5_scenarios"]
-        USA_scn = ncread(settings["fn_proj_reg"],"MSL_total_"*scenario)[1,:,:]
+        USA_scn = ncread(settings["fn_proj_reg"],"rsl_total_"*scenario)[1,:,:]
         save_ts_unc_gmt(settings["years"],USA_scn./1000,settings["dir_fig_1_gmsl_usa"]*"USA_"*scenario*".txt")
     end
     return nothing
@@ -49,15 +49,15 @@ end
 function fig_2_regional(settings)
     # Plot observations, trajectory and scenarios for each individual region
     years = ncread(settings["fn_proj_glb"],"years")
-    for (region_idx,region) ∈ enumerate(settings["regions"][2:end])
-        reg_20c = ncread(settings["fn_regional_obs"],region*"_tg")
-        reg_rsl_alt = ncread(settings["fn_regional_obs"],region*"_rsl_alt")
-        reg_trajectory = ncread(settings["fn_proj_reg"],"MSL_Trajectory")[region_idx+1,:,:]
-        save_ts_gmt(years,reg_20c./1000,settings["dir_fig_2_regional"]*region*"_20c.txt")
-        save_ts_gmt(years,reg_rsl_alt./1000,settings["dir_fig_2_regional"]*region*"_Altimetry.txt")
-        save_ts_unc_gmt(years,reg_trajectory./1000,settings["dir_fig_2_regional"]*region*"_Trajectory.txt")
+    reg_rsl = ncread(settings["fn_proj_reg"],"rsl_obs")
+    reg_alt = ncread(settings["fn_proj_reg"],"alt_obs")
+    reg_trajectory = ncread(settings["fn_proj_reg"],"rsl_trajectory")
+    for (region_idx,region) ∈ enumerate(settings["regions"])
+        save_ts_gmt(years,reg_rsl[region_idx,:]./1000,settings["dir_fig_2_regional"]*region*"_20c.txt")
+        save_ts_gmt(years,reg_alt[region_idx,:]./1000,settings["dir_fig_2_regional"]*region*"_Altimetry.txt")
+        save_ts_unc_gmt(years,reg_trajectory[region_idx,:,:]./1000,settings["dir_fig_2_regional"]*region*"_Trajectory.txt")
         for scenario ∈ settings["NCA5_scenarios"]
-            reg_scn = ncread(settings["fn_proj_reg"],"MSL_total_"*scenario)[region_idx+1,:,:]
+            reg_scn = ncread(settings["fn_proj_reg"],"rsl_total_"*scenario)[region_idx,:,:]
             save_ts_unc_gmt(years,reg_scn./1000,settings["dir_fig_2_regional"]*region*"_"*scenario*".txt")
         end
     end
@@ -82,17 +82,16 @@ function fig_4_gmsl(settings)
     read_gmsl_var!("sum_of_contrib_processes",budget,settings)
     read_gmsl_var2!("global_average_sea_level_change",GMSL,settings)
     read_gmsl_var2!("global_average_thermosteric_sea_level_change",steric,settings)
-    USA_20c = ncread(settings["fn_regional_obs"],"USA_tg")
-    fdiff = mean(USA_20c[21:40]) - mean(GMSL[21:40,2])
+    USA_20c = ncread(settings["fn_proj_reg"],"rsl_obs")[1,:]
 
-    save_ts_unc_gmt(t,0.001.*(glac),settings["dir_fig_4_gmsl"]*"glac.txt")
-    save_ts_unc_gmt(t,0.001.*(GrIS),settings["dir_fig_4_gmsl"]*"GrIS.txt")
-    save_ts_unc_gmt(t,0.001.*(AIS),settings["dir_fig_4_gmsl"]*"AIS.txt")
-    save_ts_unc_gmt(t,0.001.*(tws),settings["dir_fig_4_gmsl"]*"tws.txt")
-    save_ts_unc_gmt(t,0.001.*(steric),settings["dir_fig_4_gmsl"]*"steric.txt")
-    save_ts_unc_gmt(t,0.001.*(budget.+fdiff),settings["dir_fig_4_gmsl"]*"budget.txt")
-    save_ts_unc_gmt(t,0.001.*(GMSL.+fdiff),settings["dir_fig_4_gmsl"]*"GMSL.txt")
-    save_ts_gmt(settings["years"],0.001.*(USA_20c),settings["dir_fig_4_gmsl"]*"USA_MSL.txt")
+    save_ts_unc_gmt(t,0.001.*(glac.-glac[101,2]),settings["dir_fig_4_gmsl"]*"glac.txt")
+    save_ts_unc_gmt(t,0.001.*(GrIS.-GrIS[101,2]),settings["dir_fig_4_gmsl"]*"GrIS.txt")
+    save_ts_unc_gmt(t,0.001.*(AIS.-AIS[101,2]),settings["dir_fig_4_gmsl"]*"AIS.txt")
+    save_ts_unc_gmt(t,0.001.*(tws.-tws[101,2]),settings["dir_fig_4_gmsl"]*"tws.txt")
+    save_ts_unc_gmt(t,0.001.*(steric.-steric[101,2]),settings["dir_fig_4_gmsl"]*"steric.txt")
+    save_ts_unc_gmt(t,0.001.*(budget.-budget[101,2]),settings["dir_fig_4_gmsl"]*"budget.txt")
+    save_ts_unc_gmt(t,0.001.*(GMSL.-GMSL[101,2]) ,settings["dir_fig_4_gmsl"]*"GMSL.txt")
+    save_ts_gmt(settings["years"],0.001.*(USA_20c.-USA_20c[101]),settings["dir_fig_4_gmsl"]*"USA_MSL.txt")
     return nothing
 end
 

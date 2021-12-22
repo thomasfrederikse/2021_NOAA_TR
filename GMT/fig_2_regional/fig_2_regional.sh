@@ -17,7 +17,7 @@ gmt set PS_PAGE_ORIENTATION=portrait
 gmt set PS_LINE_CAP=butt
 gmt set PS_LINE_JOIN=round
 
-R=1970/2050/-0.30/0.80
+R=1970/2050/-0.20/0.80
 J=X7c/4.0c
 Bx=x20g20
 By=y0.2g0.2

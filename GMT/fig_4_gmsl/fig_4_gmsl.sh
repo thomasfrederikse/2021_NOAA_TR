@@ -1,13 +1,13 @@
 # Script to generate Figure 1.2
 
 ps=fig_4_gmsl.ps
-gmt set PS_MEDIA=Custom_16.0cx7c
-gmt set MAP_LABEL_OFFSET=3p
-gmt set MAP_ANNOT_OFFSET=3p
-gmt set MAP_FRAME_WIDTH=0.06c
-gmt set MAP_TICK_LENGTH_PRIMARY=0.06c
-gmt set MAP_GRID_PEN_PRIMARY=default,lightgrey
+gmt set PS_MEDIA=Custom_16.0cx8c
+gmt set MAP_LABEL_OFFSET=1p
+gmt set MAP_ANNOT_OFFSET=2p
 gmt set MAP_TITLE_OFFSET=0.1c
+gmt set MAP_FRAME_WIDTH=0.06c
+gmt set MAP_TICK_LENGTH_PRIMARY=0.04c
+gmt set MAP_GRID_PEN_PRIMARY=default,lightgrey
 gmt set MAP_FRAME_PEN=0.5p,40/40/40
 gmt set FONT_ANNOT_PRIMARY             = 8p,Hind-Light,40/40/40
 gmt set FONT_ANNOT_SECONDARY           = 8p,Hind-Light,40/40/40
@@ -18,8 +18,8 @@ gmt set PS_PAGE_ORIENTATION=portrait
 gmt set PS_LINE_CAP=butt
 gmt set PS_LINE_JOIN=round
 
-R=1920/2018/-0.22/0.12
-J=X7c/4.5c
+R=1920/2018/-0.24/0.13
+J=X7c/5.5c
 Bx=x20g20
 By=y0.1g0.1
 color0=60/60/60
@@ -34,8 +34,7 @@ color8=#ff9da7
 color9=#9c755f
 color10=#bab0ac
 
-
-gmt psbasemap -K -R$R -J$J -Y2.1c -X1.0c -BWeSn+t'Causes of global-mean sea-level rise' -B$Bx -B$By+l'Sea level (m)'  > $ps
+gmt psbasemap -K -R$R -J$J -Y2.1c -X1.0c -BWeSn+t'Causes of global-mean sea-level rise' -B$Bx -B$By+l'Sea level relative to 2000 (m)'  > $ps
 gmt psxy  -R -J -L+bD -t80 -N -G$color3 -O -K glac.txt >> $ps
 gmt psxy  -R -J -L+bD -t80 -N -G$color4 -O -K GrIS.txt >> $ps
 gmt psxy  -R -J -L+bD -t80 -N -G$color5 -O -K AIS.txt   >> $ps
@@ -51,12 +50,12 @@ gmt psxy  -R -J -N -W1.5p,$color6 -O -K tws.txt   >> $ps
 gmt psxy  -R -J -N -W1.5p,$color7 -O -K steric.txt   >> $ps
 gmt psxy  -R -J -N -W2p,$color2 -O -K Budget.txt   >> $ps
 gmt psxy  -R -J -N -W2p,$color1 -O -K GMSL.txt   >> $ps
-echo "1920 0.12 a)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
+echo "1920 0.13 a)" | gmt pstext -D0.125c/-0.125c -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
-gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Contiguous United States versus global-mean sea level' -B$Bx -B$By  >> $ps
+gmt psbasemap -O -K -R$R -J$J -X7.8c -BWeSn+t'Contiguous United States versus global-mean sea level' -B$Bx -B$By  >> $ps
 gmt psxy  -R -J -N -W2p,$color1 -O -K GMSL.txt   >> $ps
 gmt psxy  -R -J -N -W2p,$color0 -O -K USA_MSL.txt   >> $ps
-echo "1920 0.12 b)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
+echo "1920 0.13 b)" | gmt pstext -D0.125c/-0.125c -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
 gmt psbasemap -O -K -R0/0.85/0.5/5.5 -JX6.8c/1.5c -X-3.8c -Y-2.05c -T100/100/1  >> $ps
 echo -e "0.0 5 \n 0.05 5" | gmt psxy -R -J -O -K -t60 -W6p,$color3 >> $ps
