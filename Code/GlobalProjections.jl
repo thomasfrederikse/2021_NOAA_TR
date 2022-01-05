@@ -151,10 +151,10 @@ function read_NCA5(settings)
     println("  Reading NCA5 scenarios...")
     # Read the GMSL scenarios
     GMSL_NCA5 = Dict()
-    GMSL_NCA5["years"] = ncread(settings["dir_NCA5"] * "NCA5_Low_gmsl.nc","years",start=[1],count=[9])
+    GMSL_NCA5["years"] = ncread(settings["dir_NCA5"] * "NCA5_Low_gmsl.nc","years",start=[1],count=[-1])
     for scenario ∈ settings["NCA5_scenarios"]
         fn = settings["dir_NCA5"] * "NCA5_"*scenario*"_gmsl.nc"
-        GMSL_NCA5[scenario] = convert.(Float32,ncread(fn,"total",start=[1,1],count=[9,-1]))    
+        GMSL_NCA5[scenario] = convert.(Float32,ncread(fn,"total",start=[1,1],count=[-1,-1]))    
     end
     return GMSL_NCA5
 end

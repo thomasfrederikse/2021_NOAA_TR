@@ -67,10 +67,10 @@ function DefSettings()
     settings["processes_clim"]  = ["AIS","GIS","glaciers","landwaterstorage","oceandynamics"]
 
     # Trajectory years
-    settings["years_trajectory"] = [1970:2200...]
+    settings["years"] = [1900:2150...] 
+    settings["years_trajectory"] = [1970:2050...] 
     settings["years_tg"] = [1920:2020...]
     settings["years_baseline"] = [2000]
-    settings["years"] = [1900:2200...]
 
     # Figure directories
     settings["dir_gmt"] = settings["dir_project"]*"GMT/" 

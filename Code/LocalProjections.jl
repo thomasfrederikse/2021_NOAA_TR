@@ -46,10 +46,14 @@ function ExtrapolateLocalTrajectory!(local_obs,settings)
     amat_extend[:,3] = (settings["years_trajectory"] .- mean(settings["years_tg"][y_acc])).^2
 
     # Do the extrapolation
+    local_obs["obs_length"] = zeros(Int32,length(local_obs["name"])); # Number of observation-years used to estimate trajectory
+    local_obs["obs_lt_30"] = zeros(Int32,length(local_obs["name"])); # Number of observation-years used to estimate trajectory
     local_obs["rsl_trend"] = zeros(Float32,length(local_obs["name"]),3);
     local_obs["rsl_accel"] = zeros(Float32,length(local_obs["name"]),3);
     local_obs["rsl_trajectory"] = zeros(Float32,length(local_obs["name"]),length(settings["years"]),3);
     for tg in 1:length(local_obs["name"])
+        local_obs["obs_length"][tg] = sum(isfinite.(local_obs["rsl"][tg,y_acc]))
+        local_obs["obs_length"][tg] >= 30 ? local_obs["obs_lt_30"][tg] = 1 : local_obs["obs_lt_30"][tg] = 0
         trend_file = Hector.EstTrend(settings["years_tg"][y_acc],local_obs["rsl"][tg,y_acc];accel=true,model="Powerlaw",SA=false,SSA=false,monthly=false)
         μ_sol = [trend_file["bias"],trend_file["trend"],trend_file["accel"]]
         σ_sol= [trend_file["bias_sigma"],trend_file["trend_sigma"],trend_file["accel_sigma"]]
@@ -70,7 +74,7 @@ function ReadLocalProjections(local_obs,settings)
     fn = settings["dir_NCA5"]*"NCA5_Low_grid.nc"
     lon_NCA5 = ncread(fn,"lon")
     lat_NCA5 = ncread(fn,"lat")
-    years_NCA5 = convert.(Float32,ncread(fn,"years",start=[1],count=[9]))
+    years_NCA5 = convert.(Float32,ncread(fn,"years",start=[1],count=[-1]))
     pct_NCA5 = convert.(Float32,ncread(fn,"percentiles"))
 
     # Find nearest grid cell
@@ -94,7 +98,7 @@ function ReadLocalProjections(local_obs,settings)
         println("   Scenario "*scenario*"...")
         fn = settings["dir_NCA5"]*"NCA5_"*scenario*"_grid.nc"
         for prc in settings["processes"]
-            NCA5_prc = convert.(Float32,ncread(fn,prc,start=[1,1,1,1],count=[-1,-1,9,-1]));
+            NCA5_prc = convert.(Float32,ncread(fn,prc,start=[1,1,1,1],count=[-1,-1,-1,-1]));
             for tg in 1:length(local_obs["name"])
                 NCA5_local[tg][scenario][prc] = NCA5_prc[NCA5_loc[tg,1],NCA5_loc[tg,2],:,:]
             end
@@ -147,6 +151,8 @@ function save_data(local_obs,NCA5_local, years_NCA5, pct_NCA5,settings)
 
     # Write trajectory
     defVar(fh,"rsl_obs",rsl_obs,("tg","years"),deflatelevel=5)
+    defVar(fh,"number_of_observation_years_for_trajectory_estimation",local_obs["obs_length"],("tg",),deflatelevel=5)
+    defVar(fh,"number_of_observation_years_for_trajectory_estimation_geq_30",local_obs["obs_lt_30"],("tg",),deflatelevel=5)
     defVar(fh,"rsl_trajectory",local_obs["rsl_trajectory"],("tg","years","percentiles"),deflatelevel=5)
     defVar(fh,"rsl_trend",local_obs["rsl_trend"],("tg","percentiles"),deflatelevel=5)
     defVar(fh,"rsl_accel",local_obs["rsl_accel"],("tg","percentiles"),deflatelevel=5)

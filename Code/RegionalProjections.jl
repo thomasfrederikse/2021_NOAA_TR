@@ -74,7 +74,7 @@ function ReadNCA5Regional(settings)
     fn = settings["dir_NCA5"]*"NCA5_Low_grid.nc"
     lon_NCA5 = ncread(fn,"lon")
     lat_NCA5 = ncread(fn,"lat")
-    years_NCA5 = convert.(Float32,ncread(fn,"years",start=[1],count=[9]))
+    years_NCA5 = convert.(Float32,ncread(fn,"years",start=[1],count=[-1]))
     pct_NCA5 = convert.(Float32,ncread(fn,"percentiles"))
 
     # Read and interpolate the data
@@ -89,7 +89,7 @@ function ReadNCA5Regional(settings)
         fn = settings["dir_NCA5"]*"NCA5_"*scn*"_grid.nc"
         for prc in settings["processes"]
             NCA5_regional[scn][prc] = Dict()
-            NCA5_prc_raw = convert.(Float32,ncread(fn,prc,start=[1,1,1,1],count=[-1,-1,9,-1]));
+            NCA5_prc_raw = convert.(Float32,ncread(fn,prc,start=[1,1,1,1],count=[-1,-1,-1,-1]));
             NCA5_prc_int = LinearInterpolation((lon_NCA5, lat_NCA5,years_NCA5,pct_NCA5),NCA5_prc_raw,extrapolation_bc = Line())(mask["ϕ"],mask["θ"],years_NCA5,pct_NCA5);
             for region in settings["regions"]
                 NCA5_regional[scn][prc][region] = (sum((@. NCA5_prc_int*area*mask[region]),dims=(1,2)) / sum(area .* mask[region]))[1,1,:,:]
