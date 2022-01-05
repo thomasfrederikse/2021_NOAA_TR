@@ -68,6 +68,7 @@ function DefSettings()
 
     # Trajectory years
     settings["years"] = [1900:2150...] 
+    settings["years_trajectory_global"] = [1970:2100...] 
     settings["years_trajectory"] = [1970:2050...] 
     settings["years_tg"] = [1920:2020...]
     settings["years_baseline"] = [2000]

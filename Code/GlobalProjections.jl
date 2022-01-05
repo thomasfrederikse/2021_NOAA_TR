@@ -65,7 +65,7 @@ function compute_GMSL_trajectory(GMSL_20c,settings)
     # Compute the trajectory for GMSL and extrapolate
     # -----------------------------------------------
     println("  Computing GMSL trajectories...")
-    t_acc = findall(in(settings["years_trajectory"]),GMSL_20c["years"])
+    t_acc = findall(in(settings["years_trajectory_global"]),GMSL_20c["years"])
 
     # Compute trend and acceleration in each of the ensemble members of F2020 GMSL
     amat = ones(length(t_acc),3)
@@ -74,10 +74,10 @@ function compute_GMSL_trajectory(GMSL_20c,settings)
     amat_tr = transpose(amat)
     amat_sq = inv(amat_tr*amat)
     sol_arr = zeros(length(GMSL_20c["likelihood"]),3)
-    amat_expand = ones(length(settings["years_trajectory"]),3)
-    amat_expand[:,2] = settings["years_trajectory"] .- mean(GMSL_20c["years"][t_acc])
-    @. amat_expand[:,3] = 0.5 * (settings["years_trajectory"] - $mean(GMSL_20c["years"][t_acc]))^2
-    η_projected = zeros(length(settings["years_trajectory"]),length(GMSL_20c["likelihood"]))
+    amat_expand = ones(length(settings["years_trajectory_global"]),3)
+    amat_expand[:,2] = settings["years_trajectory_global"] .- mean(GMSL_20c["years"][t_acc])
+    @. amat_expand[:,3] = 0.5 * (settings["years_trajectory_global"] - $mean(GMSL_20c["years"][t_acc]))^2
+    η_projected = zeros(length(settings["years_trajectory_global"]),length(GMSL_20c["likelihood"]))
 
     # Generate autocorrelated noise to account for uncertainties in the trajectory due to
     # internal variability and add this to the ensemble members
@@ -93,11 +93,11 @@ function compute_GMSL_trajectory(GMSL_20c,settings)
 
     # Statistics: compute mean and confidence intervals
     # of the extrapolated trajectory
-    projection_mean = zeros(length(settings["years_trajectory"]),3)
+    projection_mean = zeros(length(settings["years_trajectory_global"]),3)
     sidx = zeros(Int,length(GMSL_20c["likelihood"]))
     𝚲    = zeros(Float64,length(GMSL_20c["likelihood"]))
     Η    = zeros(Float64,length(GMSL_20c["likelihood"]))
-    for ts ∈ 1:length(settings["years_trajectory"])
+    for ts ∈ 1:length(settings["years_trajectory_global"])
         sortperm!(sidx, η_projected[ts,:])
         cumsum!(𝚲,GMSL_20c["likelihood"][sidx])
         @. Η = @views η_projected[ts,sidx];
@@ -161,17 +161,17 @@ end
 
 function correct_baselines!(GMSL_20c,GMSL_Trajectory,GMSL_Altimetry,GMSL_NCA5,settings)
     # Correct baseline: baseline for everything is trajectory value in 2000
-    traj_baseline = findall(in(settings["years_baseline"]),settings["years_trajectory"])
-    traj_nca5_start = findfirst(settings["years_trajectory"].==2005)
+    traj_baseline = findall(in(settings["years_baseline"]),settings["years_trajectory_global"])
+    traj_nca5_start = findfirst(settings["years_trajectory_global"].==2005)
 
     GMSL_Trajectory["rsl"] .-= mean(GMSL_Trajectory["rsl"][traj_baseline,:])
 
-    traj_bl = findall(in(intersect(settings["years_trajectory"],GMSL_20c["years"])),settings["years_trajectory"])
-    obs_bl  = findall(in(intersect(settings["years_trajectory"],GMSL_20c["years"])),GMSL_20c["years"])
+    traj_bl = findall(in(intersect(settings["years_trajectory_global"],GMSL_20c["years"])),settings["years_trajectory_global"])
+    obs_bl  = findall(in(intersect(settings["years_trajectory_global"],GMSL_20c["years"])),GMSL_20c["years"])
     GMSL_20c["rsl"] = GMSL_20c["rsl"] .- mean(GMSL_20c["rsl"][obs_bl,2]) .+ mean(GMSL_Trajectory["rsl"][traj_bl,2])
 
-    traj_bl = findall(in(intersect(settings["years_trajectory"],GMSL_Altimetry["years"])),settings["years_trajectory"])
-    obs_bl  = findall(in(intersect(settings["years_trajectory"],GMSL_Altimetry["years"])),GMSL_Altimetry["years"])
+    traj_bl = findall(in(intersect(settings["years_trajectory_global"],GMSL_Altimetry["years"])),settings["years_trajectory_global"])
+    obs_bl  = findall(in(intersect(settings["years_trajectory_global"],GMSL_Altimetry["years"])),GMSL_Altimetry["years"])
     GMSL_Altimetry["alt"] = GMSL_Altimetry["alt"] .- mean(GMSL_Altimetry["alt"][obs_bl]) .+ mean(GMSL_Trajectory["rsl"][traj_bl,2])
 
     for scenario in settings["NCA5_scenarios"]
@@ -191,7 +191,7 @@ function save_data(GMSL_20c,GMSL_Trajectory,GMSL_Altimetry,GMSL_NCA5,settings)
     # Write observations and trajectory
     defVar(fh,"GMSL_20c",Float32,("years","percentiles"),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,GMSL_20c["years"]),[1.0f0:3.0f0...]),GMSL_20c["rsl"],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
     defVar(fh,"GMSL_Altimetry",Float32,("years",),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,GMSL_Altimetry["years"])),GMSL_Altimetry["alt"],extrapolation_bc=NaN32)(settings["years"])
-    defVar(fh,"GMSL_Trajectory",Float32,("years","percentiles"),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,settings["years_trajectory"]),[1.0f0:3.0f0...]),GMSL_Trajectory["rsl"],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
+    defVar(fh,"GMSL_Trajectory",Float32,("years","percentiles"),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,settings["years_trajectory_global"]),[1.0f0:3.0f0...]),GMSL_Trajectory["rsl"],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
     
     defVar(fh,"GMSL_trend",GMSL_Trajectory["trend"],("percentiles",),deflatelevel=5)
     defVar(fh,"GMSL_accel",GMSL_Trajectory["accel"],("percentiles",),deflatelevel=5)
