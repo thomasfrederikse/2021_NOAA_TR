@@ -20,11 +20,11 @@ include(dir_code*"SaveFigureData.jl")
 function main()
     settings = DefSettings()
     # ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Not needed to run: converted files are present
-    # GlobalProjections.RunGlobalProjections(settings)
-    # RegionalProjections.RunRegionalProjections(settings)
-    # LocalProjections.RunLocalProjections(settings)
+    GlobalProjections.RunGlobalProjections(settings)
+    RegionalProjections.RunRegionalProjections(settings)
+    LocalProjections.RunLocalProjections(settings)
     GriddedProjections.RunGriddedProjections(settings)
-    # SaveFigureData.RunSaveFigureData(settings)
+    SaveFigureData.RunSaveFigureData(settings)
     return nothing
 end
 

@@ -127,6 +127,8 @@ function fig_5_divergence(settings)
             l_plot = [settings["years"][scn_below_traj] 0.001*GMSL_scn[scn_below_traj,2] ; settings["years"][scn_below_traj] -0.05 ]
             writedlm(settings["dir_fig_5_divergence"]*"div_p_"*scenario*".txt",p_plot,";")
             writedlm(settings["dir_fig_5_divergence"]*"div_l_"*scenario*".txt",l_plot,";")
+        else
+            println("ERROR: no divergence for "*scenario*" from trajectory!")
         end
     end
 
@@ -152,6 +154,8 @@ function fig_5_divergence(settings)
             l_plot = [settings["years"][scn_below_traj] 0.001*GMSL_scn[scn_below_traj,2] ; settings["years"][scn_below_traj] -0.05 ]
             writedlm(settings["dir_fig_5_divergence"]*"div_p_Int_"*scenario*".txt",p_plot,";")
             writedlm(settings["dir_fig_5_divergence"]*"div_l_Int_"*scenario*".txt",l_plot,";")
+        else
+            println("ERROR: no divergence for "*scenario*" from intermediate!")
         end
     end
     return nothing
