@@ -9,10 +9,10 @@ To run this code, you need [Julia](https://julialang.org/). The code requires th
 They can be installed by pressing ] at the Julia REPL and typing
 `add CSV Interpolations JSON  LoopVectorization  MAT  NCDatasets NetCDF Plots XLSX LinearAlgebra Statistics`. This program also requires [Hector](http://segal.ubi.pt/hector/). Hector needs to be installed or compiled. In the file `Hector.jl` update the path to the Hector executable on lines 30 and 104. 
 
-Run `run_NOAA_tr.jl` in the REPL or run `julia run_NOAA_tr.jl` from the command line to run the projections. The projections are then written to the `.\Data` directory. 
+Run `Run_TR.jl` in the REPL or run `julia Run_TR.jl` from the command line to run the projections. The projections are then written to the `.\Data` directory. 
 
 The folder contains the following files:
-- `run_NOAA_tr.jl`: This is the main routine that (eventually) calls all the functions to compute the projections.
+- `Run_TR.jl`: This is the main routine that (eventually) calls all the functions to compute the projections.
 - `ConvertNCA5ToGrid.jl`: Converts the original NCA5 projections to a set of netCDF files that's used throughout this code
 - `ProcessObservations.jl`: Reads and processes the tide-gauge and altimetry observations
 - `GlobalProjections.jl`: Reads and processes the GMSL observations and projections, and computes the trajectory
@@ -47,9 +47,10 @@ The following input data has been included for the analysis. Please appropriatel
 - `NCA5_projections` Contains the NCA5 projections for each scenario (Low, IntLow, Int, IntHigh, and High). For each scenario, the GMSL projections, projections at tide-gauge locations and on a 1-degree grid are provided.  
 
 #### Output data
-- `NOAA_TR_global_projections.nc`: GMSL projections, trajectory, and observations for the report
-- `NOAA_TR_regional_projections.nc`: Regional observations, projections and trajectories for the report
-- `NOAA_TR_local_projections.nc`: Local observations, projections and trajectories for the report
+- `TR_global_projections.nc`: GMSL projections, trajectory, and observations for the report
+- `TR_regional_projections.nc`: Regional observations, projections and trajectories for the report
+- `TR_local_projections.nc`: Local observations, projections and trajectories for the report
+- `TR_gridded_projections.nc`: Gridded projections for the report
 
 To read the NetCDF files, many free software is available, including [ncview](http://meteora.ucsd.edu/~pierce/ncview_home_page.html) and [Panoply](https://www.giss.nasa.gov/tools/panoply/). NetCDF packages are available for Julia and Python as well to directly import the data. 
 
