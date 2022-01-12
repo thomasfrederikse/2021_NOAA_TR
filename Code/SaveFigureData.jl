@@ -115,8 +115,8 @@ function fig_5_divergence(settings)
         save_ts_unc_gmt(settings["years"],GMSL_scn./1000,settings["dir_fig_5_divergence"]*"GMSL_"*scenario*".txt")
         diff_mean = @. (GMSL_scn[:,2] - GMSL_Trajectory[:,2])
         diff_err = @. 2 * sqrt((0.5*(GMSL_scn[:,3] - GMSL_scn[:,1]))^2 + (0.5*(GMSL_Trajectory[:,3] - GMSL_Trajectory[:,1]))^2)
-        scn_above_traj = findfirst(@. (diff_mean - diff_err) > 0)
-        scn_below_traj = findfirst(@. (diff_mean + diff_err) < 0)
+        scn_above_traj = findfirst(@. (diff_mean - diff_err) >= 0)
+        scn_below_traj = findfirst(@. (diff_mean + diff_err) <= 0)
         if !isnothing(scn_above_traj)
             p_plot = [settings["years"][scn_above_traj] 0.001*GMSL_scn[scn_above_traj,2] 1]
             l_plot = [settings["years"][scn_above_traj] 0.001*GMSL_scn[scn_above_traj,2] ; settings["years"][scn_above_traj] -0.05]
@@ -140,8 +140,8 @@ function fig_5_divergence(settings)
         GMSL_scn = ncread(settings["fn_proj_glb"],"GMSL_"*scenario)
         diff_mean = @. (GMSL_scn[:,2] - GMSL_int[:,2])
         diff_err = @. 2 * sqrt((0.5*(GMSL_scn[:,3] - GMSL_scn[:,1]))^2 + (0.5*(GMSL_int[:,3] - GMSL_int[:,1]))^2)
-        scn_above_traj = findfirst(@. (diff_mean - diff_err) > 0)
-        scn_below_traj = findfirst(@. (diff_mean + diff_err) < 0)
+        scn_above_traj = findfirst(@. (diff_mean - diff_err) >= 0)
+        scn_below_traj = findfirst(@. (diff_mean + diff_err) <= 0)
         if !isnothing(scn_above_traj)
             p_plot = [settings["years"][scn_above_traj] 0.001*GMSL_scn[scn_above_traj,2] 1]
             l_plot = [settings["years"][scn_above_traj] 0.001*GMSL_scn[scn_above_traj,2] ; settings["years"][scn_above_traj] -0.05]

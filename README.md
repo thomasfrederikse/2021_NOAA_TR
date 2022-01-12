@@ -18,6 +18,7 @@ The folder contains the following files:
 - `GlobalProjections.jl`: Reads and processes the GMSL observations and projections, and computes the trajectory
 - `RegionalProjections.jl`: Reads and processes the regional projections and computes the trajectories
 - `LocalProjections.jl`: Reads and processes the local projections at the tide-gauge locations and computes the trajectories
+- `GriddedProjections.jl`: Reads the gridded NCA5 projections and add a GMSL baseline correction for the 2005 vs 2000 baseline
 - `SaveFigureData.jl`: Reads the results and writes text files for GMT
 - `Hector.jl`: Wrapper for [Hector](http://segal.ubi.pt/hector/), used to compute trends and uncertainties.
 - `Masks.jl`: Defines the region masks for each region.

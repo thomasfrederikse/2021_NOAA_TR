@@ -46,6 +46,7 @@ function ConvertGMSL(settings)
         gmsl[scn] = 10 .* convert.(Int,data_raw[3*(idx-1)+1:3*idx,7:end]')
         @. gmsl[scn] = gmsl[scn][:,[2,1,3]]
     end
+
     # Save as netcdf
     for (idx,scn) ∈ enumerate(settings["NCA5_scenarios"])
         fn_gmsl_out = settings["dir_NCA5"] * "NCA5_"*scn*"_gmsl.nc"
