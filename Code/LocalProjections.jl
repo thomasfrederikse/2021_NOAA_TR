@@ -27,7 +27,7 @@ function RunLocalProjections(settings)
     local_obs  = ProcessObservations.ReadLocalObs(settings)
     ExtrapolateLocalTrajectory!(local_obs,settings)
     NCA5_local,years_NCA5,pct_NCA5 = ReadLocalProjections(local_obs,settings)
-    correct_baselines!(local_obs,settings)
+    correct_baselines!(local_obs,NCA5_local, settings)
     save_data(local_obs,NCA5_local, years_NCA5, pct_NCA5,settings)
     println("Local observations, trajectories and scenarios done\n")
 end
@@ -107,16 +107,27 @@ function ReadLocalProjections(local_obs,settings)
     return NCA5_local,years_NCA5,pct_NCA5
 end
 
-function correct_baselines!(local_obs,settings)
+function correct_baselines!(local_obs,NCA5_local, settings)
     # Correct baseline: baseline for everything is trajectory value in 2000
     traj_baseline = findall(in(settings["years_baseline"]),settings["years"])
+    traj_nca5_start = findfirst(settings["years"].==2005)
+
     for tg in 1:length(local_obs["name"])
+        # 1. Baseline trajectory
         local_obs["rsl_trajectory"][tg,:,:] .-= local_obs["rsl_trajectory"][tg,traj_baseline,2]
+        
+        # 2. Baseline observations 
         acc_obs = isfinite.(local_obs["rsl"][tg,:])
         yr_int = intersect(settings["years_tg"][acc_obs],settings["years_trajectory"])
         obs_mn = mean(local_obs["rsl"][tg,(findall(in(yr_int),settings["years_tg"]))])
         traj_mn = mean(local_obs["rsl_trajectory"][tg,(findall(in(yr_int),settings["years"])),2])
-        local_obs["rsl"] = local_obs["rsl"] .- obs_mn .+ traj_mn
+        local_obs["rsl"][tg,:] = local_obs["rsl"][tg,:] .- obs_mn .+ traj_mn
+
+        # 3. Baseline scenarios
+        for scenario in settings["NCA5_scenarios"]
+            NCA5_local[tg][scenario]["total"] .+= local_obs["rsl_trajectory"][tg,traj_nca5_start,2]
+            NCA5_local[tg][scenario]["verticallandmotion"] .+= local_obs["rsl_trajectory"][tg,traj_nca5_start,2]
+        end
     end
     return nothing
 end
@@ -166,4 +177,17 @@ function save_data(local_obs,NCA5_local, years_NCA5, pct_NCA5,settings)
     return nothing
 end
 
+function example_plots(local_obs,NCA5_local, years_NCA5, pct_NCA5,settings)
+    tg = 73; # Rockfort
+
+    scn_cl = cgrad(:viridis, 3, categorical = true)
+
+    plot(settings["years_tg"],local_obs["rsl"][tg,:],color=:red,linewidth=2)
+    plot!(settings["years"],local_obs["rsl_trajectory"][tg,:,2],color=:blue,linewidth=2)
+    plot!(years_NCA5,NCA5_local[tg]["Low"]["total"][:,2],color=scn_cl[1],linewidth=2)
+    plot!(years_NCA5,NCA5_local[tg]["Int"]["total"][:,2],color=scn_cl[2],linewidth=2)
+    plot!(years_NCA5,NCA5_local[tg]["High"]["total"][:,2],color=scn_cl[3],linewidth=2,legend=false)
+    xlims!((1970,2050))
+    ylims!((-200,1000))
+    savefig("Rockport.png")
 end

@@ -68,7 +68,7 @@ echo "1.21 5 Northwest Coast " | gmt pstext -R -J -F+f8+jLM -O -K -N >> $ps
 
 echo -e "1 4 \n 1.2 4" | gmt psxy -R -J -O -K -t40 -W7p,$color7 >> $ps
 echo -e "1.1 4 1" | gmt psxy -R -J -O -K -Sc0.15c -G$color7 >> $ps
-echo "1.21 4 Pacific Islands " | gmt pstext -R -J -F+f8+jLM -O -K -N >> $ps
+echo "1.21 4 Hawaiian Islands " | gmt pstext -R -J -F+f8+jLM -O -K -N >> $ps
 
 echo -e "1 3 \n 1.2 3" | gmt psxy -R -J -O -K -t40 -W7p,$color8 >> $ps
 echo -e "1.1 3 1" | gmt psxy -R -J -O -K -Sc0.15c -G$color8 >> $ps
