@@ -49,7 +49,7 @@ function ComputeRegionalTrajectory!(region_obs,settings)
     amat_extend[:,2] .= settings["years_trajectory"] .- mean(settings["years_tg"][y_acc])
     amat_extend[:,3] = (settings["years_trajectory"] .- mean(settings["years_tg"][y_acc])).^2
     for region in settings["regions"]
-        trend_file = Hector.EstTrend(settings["years_tg"][y_acc],region_obs[region]["rsl"][y_acc];accel=true,model="Powerlaw",SA=false,SSA=false,monthly=false)
+        trend_file = Hector.EstTrend(settings["years_tg"][y_acc],region_obs[region]["rsl"][y_acc];accel=true,model="Powerlaw",SA=false,SSA=false,monthly=false,tref=mean(settings["years_tg"][y_acc]))
         μ_sol = [trend_file["bias"],trend_file["trend"],trend_file["accel"]]
         σ_sol= [trend_file["bias_sigma"],trend_file["trend_sigma"],trend_file["accel_sigma"]]
         sol_arr = reshape(μ_sol,(1,3)) .+ randn(5000,3) .* reshape(σ_sol,(1,3))

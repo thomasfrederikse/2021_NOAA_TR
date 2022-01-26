@@ -16,6 +16,7 @@ using NCDatasets
 using MAT
 using Interpolations
 using CSV
+
 dir_code = homedir()*"/Projects/2021_NOAA_TR/Code/"
 include(dir_code*"Masks.jl")
 include(dir_code*"Hector.jl")
@@ -54,7 +55,7 @@ function ExtrapolateLocalTrajectory!(local_obs,settings)
     for tg in 1:length(local_obs["name"])
         local_obs["obs_length"][tg] = sum(isfinite.(local_obs["rsl"][tg,y_acc]))
         local_obs["obs_length"][tg] >= 30 ? local_obs["obs_lt_30"][tg] = 1 : local_obs["obs_lt_30"][tg] = 0
-        trend_file = Hector.EstTrend(settings["years_tg"][y_acc],local_obs["rsl"][tg,y_acc];accel=true,model="Powerlaw",SA=false,SSA=false,monthly=false)
+        trend_file = Hector.EstTrend(settings["years_tg"][y_acc],local_obs["rsl"][tg,y_acc];accel=true,model="Powerlaw",SA=false,SSA=false,monthly=false,tref=mean(settings["years_tg"][y_acc]))
         μ_sol = [trend_file["bias"],trend_file["trend"],trend_file["accel"]]
         σ_sol= [trend_file["bias_sigma"],trend_file["trend_sigma"],trend_file["accel_sigma"]]
         sol_arr = reshape(μ_sol,(1,3)) .+ randn(5000,3) .* reshape(σ_sol,(1,3))
@@ -108,6 +109,7 @@ function ReadLocalProjections(local_obs,settings)
 end
 
 function correct_baselines!(local_obs,NCA5_local, settings)
+    println("  Correcting baselines for trajectory, observations and scenarios...")
     # Correct baseline: baseline for everything is trajectory value in 2000
     traj_baseline = findall(in(settings["years_baseline"]),settings["years"])
     traj_nca5_start = findfirst(settings["years"].==2005)
@@ -178,16 +180,19 @@ function save_data(local_obs,NCA5_local, years_NCA5, pct_NCA5,settings)
 end
 
 function example_plots(local_obs,NCA5_local, years_NCA5, pct_NCA5,settings)
-    tg = 73; # Rockfort
+    # Make a simple plot of all local time series 
+    for tg in 1:length(local_obs["name"])
+        scn_cl = cgrad(:viridis, 3, categorical = true)
+        plot(settings["years_tg"],local_obs["rsl"][tg,:],color=:red,linewidth=2)
+        plot!(settings["years"],local_obs["rsl_trajectory"][tg,:,2],color=:blue,linewidth=2)
+        plot!(years_NCA5,NCA5_local[tg]["Low"]["total"][:,2],color=scn_cl[1],linewidth=2)
+        plot!(years_NCA5,NCA5_local[tg]["Int"]["total"][:,2],color=scn_cl[2],linewidth=2)
+        plot!(years_NCA5,NCA5_local[tg]["High"]["total"][:,2],color=scn_cl[3],linewidth=2,legend=false)
+        xlims!((1970,2050))
+        ylims!((-200,1000))
+        title!(local_obs["name"][tg])
+        savefig(homedir()*"/Scratch/Plots/"*string(tg)*".png")
+    end
+end
 
-    scn_cl = cgrad(:viridis, 3, categorical = true)
-
-    plot(settings["years_tg"],local_obs["rsl"][tg,:],color=:red,linewidth=2)
-    plot!(settings["years"],local_obs["rsl_trajectory"][tg,:,2],color=:blue,linewidth=2)
-    plot!(years_NCA5,NCA5_local[tg]["Low"]["total"][:,2],color=scn_cl[1],linewidth=2)
-    plot!(years_NCA5,NCA5_local[tg]["Int"]["total"][:,2],color=scn_cl[2],linewidth=2)
-    plot!(years_NCA5,NCA5_local[tg]["High"]["total"][:,2],color=scn_cl[3],linewidth=2,legend=false)
-    xlims!((1970,2050))
-    ylims!((-200,1000))
-    savefig("Rockport.png")
 end

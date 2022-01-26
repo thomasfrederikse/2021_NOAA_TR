@@ -19,7 +19,7 @@ include(dir_code*"SaveFigureData.jl")
 
 function main()
     settings = DefSettings()
-    # Masks.CreateMask(settings)
+    # Masks.CreateMask(settings)                       # Not needed to run: mask file is present
     # ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Not needed to run: converted files are present
     GlobalProjections.RunGlobalProjections(settings)
     RegionalProjections.RunRegionalProjections(settings)
