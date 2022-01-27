@@ -34,6 +34,8 @@ function ReadLocalObs(settings)
     println("  Reading tide-gauge data...")
     # Read data file
     tg_data_raw = XLSX.readxlsx(settings["fn_tg_data"])["monthly MSL"][:]
+
+
     
     # Station name, lon,lat coords. Longitude in [0 360] interval
     station_names = Vector{String}(tg_data_raw[1,2:122])
@@ -85,6 +87,30 @@ function ReadLocalObs(settings)
         end
     end
     local_obs["region"] = MapToRegions(local_obs,settings)
+
+    # Find nearest PSMSL ID (For Nga)
+    psmsl_data = readdlm(settings["dir_project"] * "Data/filelist_psmsl.txt" ,';')
+    lon_psmsl = mod.(convert.(Float32,psmsl_data[:,3]),360)
+    lat_psmsl = convert.(Float32,psmsl_data[:,2])
+    # name_psmsl = psmsl_data[:,4]
+    id_psmsl = convert.(Int32,psmsl_data[:,1])
+    local_obs["psmsl_id"] = zeros(Int,length(local_obs["name"]))
+    for tg in 1:length(local_obs["name"])
+        dst_arr = (local_obs["coords"][tg,1].-lon_psmsl).^2 + (local_obs["coords"][tg,2].-lat_psmsl).^2
+        if minimum(dst_arr) .< 0.001
+            local_obs["psmsl_id"][tg] = id_psmsl[argmin(dst_arr)]
+            # println(rpad(local_obs["name"][tg],40," ")*" "*name_psmsl[argmin(dst_arr)])
+        else
+            local_obs["psmsl_id"][tg] = -1
+            # println("NOMATCH: "*rpad(local_obs["name"][tg],40," ")*" "*name_psmsl[argmin(dst_arr)])
+        end
+    end
+
+    # Flag Chesapeake bridge and La Jolla because of possible data problems
+    local_obs["qc_flag"] = zeros(Bool,length(local_obs["name"]))
+    local_obs["qc_flag"][findfirst(==(256),local_obs["psmsl_id"])] = true
+    local_obs["qc_flag"][findfirst(==(1635),local_obs["psmsl_id"])] = true
+
     return local_obs
 end
 

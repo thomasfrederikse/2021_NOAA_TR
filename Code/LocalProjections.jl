@@ -33,7 +33,6 @@ function RunLocalProjections(settings)
     println("Local observations, trajectories and scenarios done\n")
 end
 
-
 function ExtrapolateLocalTrajectory!(local_obs,settings)
     # Compute and extrapolate the trajectory in observed sea level
     println("  Extrapolating tide-gauge records to compute trajectory...")
@@ -162,6 +161,10 @@ function save_data(local_obs,NCA5_local, years_NCA5, pct_NCA5,settings)
     defVar(fh,"years",settings["years"],("years",),deflatelevel=5)
     defVar(fh,"percentiles",convert.(Int32,[17,50,83]),("percentiles",),deflatelevel=5)
 
+    defVar(fh,"PSMSL_id",convert.(Int32,local_obs["psmsl_id"]),("tg",),deflatelevel=5,attrib = Dict(
+        "comments" => "PSMSL ID to which the tide gauge corresponds. Stations that are not in PSMSL are flagged -1."))
+    defVar(fh,"QC_flag",convert.(Int8,local_obs["qc_flag"]),("tg",),deflatelevel=5,attrib = Dict(
+        "comments" => "Quality control flag. Value of 1 means possible issue. Currently manual process"))
     # Write trajectory
     defVar(fh,"rsl_obs",rsl_obs,("tg","years"),deflatelevel=5)
     defVar(fh,"number_of_observation_years_for_trajectory_estimation",local_obs["obs_length"],("tg",),deflatelevel=5)
