@@ -1,6 +1,13 @@
 # Code and data for Section 2 of the Interagency report: Global and Regional Sea Level Rise Scenarios for the United States: Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines
 This repository contains the code and data needed to produce the trajectories, projections, and observations for the Interagency report: Global and Regional Sea Level Rise Scenarios for the United States: Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines.
 
+The report can be found on <https://oceanservice.noaa.gov/hazards/sealevelrise/sealevelrise-tech-report-sections.html>
+
+An interactive tool to study the observations, trajectories, and scenarios can be accessed from <https://sealevel.nasa.gov/task-force-scenario-tool>
+
+Frequently-asked questions: <https://sealevel.sit.earthdata.nasa.gov/faq/16/>
+
+
 ## Authors
 - William V. Sweet, NOAA National Ocean Service 
 - Benjamin D. Hamlington, NASA Jet Propulsion Laboratory 
@@ -62,7 +69,7 @@ The folder contains the following files:
 - `Masks.jl`: Defines the region masks for each region.
 
 ### Data
-The `Data` directory contains the input data sets used during the computations. Please appropriately cite the source data if used. It contains the following:
+The `Data` directory contains the input data sets used during the computations. Please appropriately cite the input data if you use it. It contains the following:
 
 Directories:
 - `ClimIdx`: Map with climate indices (NAO, PDO, MEI) used to remove internal variability. All the indices come from NOAA [Physical Sciences Laboratory (PSL)](https://psl.noaa.gov/data/climateindices/) and [NOAA Climate Prediction Centre (CPC)](https://www.cpc.ncep.noaa.gov/data/teledoc/telecontents.shtml)
