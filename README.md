@@ -1,5 +1,5 @@
 # Code and data for Section 2 of the Interagency report: Global and Regional Sea Level Rise Scenarios for the United States: Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines
-This repository contains almost all code and data needed to compute the trajectories, projections, and observations for the Interagency report: Global and Regional Sea Level Rise Scenarios for the United States: Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines.
+This repository contains the code and data needed to produce the trajectories, projections, and observations for the Interagency report: Global and Regional Sea Level Rise Scenarios for the United States: Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines.
 
 ## Authors
 - William V. Sweet, NOAA National Ocean Service 
