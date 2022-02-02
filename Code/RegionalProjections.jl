@@ -131,13 +131,17 @@ end
 function SaveRegionData(region_obs,NCA5_regional,settings)
     println("  Saving...")
     fh = Dataset(settings["fn_proj_reg"],"c")
+    fh.attrib["title"] = "Regional projections"
+    fh.attrib["description"] = "Regional projections, trajectory, and observations for the interagency report: Global and Regional Sea Level Rise Scenarios for the United States: Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines"
+    fh.attrib["processes"] = "AIS: Antarctic Ice Sheet, GIS: Greenland, glaciers: Glaciers and Ice Caps, landwaterstorage: Liquid water storage changes on land, oceandynamics: Ocean dynamics and global thermosteric expansion, verticallandmotion: Vertical land motion, total: All processes combined."
+    fh.attrib["regions"] = "USA: Contiguous United States, EC: Northeast Atlantic Coast, SE: Southeast, GCE: Eastern Gulf Coast, GCW: Western Gulf Coast, SWC: Southwest Pacific Coast, NWC: Northwest Pacific Coast, PAC: Hawaiian Islands, CAR: Caribbean Islands, ALN: Alaska North, ALS: Alaska South."
     defDim(fh,"years", length(settings["years"]))
     defDim(fh,"percentiles",3)
     defDim(fh,"region", length(settings["regions"]))
 
-    defVar(fh,"region",settings["regions"],("region",),deflatelevel=5)
-    defVar(fh,"years",settings["years"],("years",),deflatelevel=5)
-    defVar(fh,"percentiles",convert.(Int32,[17,50,83]),("percentiles",),deflatelevel=5)
+    defVar(fh,"region",settings["regions"],("region",),deflatelevel=5, attrib = Dict("description" => "Region abbreviation for which the projection has been made.", "units" => "-"))
+    defVar(fh,"years",settings["years"],("years",),deflatelevel=5,attrib = Dict("units" => "years"))
+    defVar(fh,"percentiles",convert.(Int32,[17,50,83]),("percentiles",),deflatelevel=5, attrib = Dict("description" => "The percentile of the projection. The 50th percentile shows the median projection, and the 17th and 83rd show the upper- and lower bound on the 1 sigma level.", "units" => "-"))
 
     # Write observations
     rsl_obs_array = zeros(Float32,length(settings["regions"]),length(settings["years"])) .* NaN32
@@ -147,21 +151,21 @@ function SaveRegionData(region_obs,NCA5_regional,settings)
         rsl_obs_array[region_idx,:] = LinearInterpolation((convert.(Float32,settings["years_tg"])),region_obs[region]["rsl"],extrapolation_bc=NaN32)(settings["years"])
         alt_obs_array[region_idx,:] = LinearInterpolation((convert.(Float32,settings["years_tg"])),region_obs[region]["alt"],extrapolation_bc=NaN32)(settings["years"])
     end
-    defVar(fh,"rsl_obs",rsl_obs_array,("region","years"),deflatelevel=5)
-    defVar(fh,"alt_obs",alt_obs_array,("region","years"),deflatelevel=5)
+    defVar(fh,"rsl_obs",rsl_obs_array,("region","years"),deflatelevel=5,attrib = Dict("description" => "Observed regional sea-level changes, relative to year 2000. (tide-gauge observations)", "units" => "mm"))
+    defVar(fh,"alt_obs",alt_obs_array,("region","years"),deflatelevel=5,attrib = Dict("description" => "Observed regional sea-level changes, relative to year 2000. (altimetry observations)", "units" => "mm"))
 
     # Write trajectory
     trajectory = zeros(Float32,length(settings["regions"]),length(settings["years"]),3) .* NaN32
     [trajectory[region_idx,:,:] = (LinearInterpolation((settings["years_trajectory"],[1.0f0:3.0f0...]),region_obs[region]["rsl_trajectory"],extrapolation_bc=NaN32)[settings["years"],[1.0f0:3.0f0...]]) for (region_idx,region) ∈ enumerate(settings["regions"])]
-    defVar(fh,"rsl_trajectory",trajectory,("region","years","percentiles"),deflatelevel=5)
+    defVar(fh,"rsl_trajectory",trajectory,("region","years","percentiles"),deflatelevel=5, attrib = Dict("description" => "Estimated regional sea-level trajectory, relative to year 2000.", "units" => "mm"))
 
     # Write trends and accelerations
     trends = zeros(Float32,length(settings["regions"]),3) .* NaN32
     accels = zeros(Float32,length(settings["regions"]),3) .* NaN32
     [trends[region_idx,:] = region_obs[region]["trend"] for (region_idx,region) ∈ enumerate(settings["regions"])]
     [accels[region_idx,:] = region_obs[region]["accel"] for (region_idx,region) ∈ enumerate(settings["regions"])]
-    defVar(fh,"rsl_trend",trends,("region","percentiles"),deflatelevel=5)
-    defVar(fh,"rsl_accel",accels,("region","percentiles"),deflatelevel=5)
+    defVar(fh,"rsl_trend",trends,("region","percentiles"),deflatelevel=5, attrib = Dict("description" => "Linear trend of estimated trajectory", "units" => "mm yr-1"))
+    defVar(fh,"rsl_accel",accels,("region","percentiles"),deflatelevel=5, attrib = Dict("description" => "Acceleration (half quadratic) of estimated trajectory", "units" => "mm yr-2"))
 
     # Write projections
     scn_array = zeros(Float32,length(settings["regions"]),length(settings["years"]),3) .* NaN32
@@ -170,7 +174,7 @@ function SaveRegionData(region_obs,NCA5_regional,settings)
             for (region_idx,region) ∈ enumerate(settings["regions"])
                 scn_array[region_idx,:,:] = (LinearInterpolation((NCA5_regional["years"],[1.0f0:3.0f0...]),NCA5_regional[scn][prc][region],extrapolation_bc=NaN32)[settings["years"],[1.0f0:3.0f0...]])
             end
-            defVar(fh,"rsl_"*prc*"_"*scn,scn_array,("region","years","percentiles",),deflatelevel=5)
+            defVar(fh,"rsl_"*prc*"_"*scn,scn_array,("region","years","percentiles",),deflatelevel=5, attrib = Dict("description" => "Projected regional sea level for scenario "*scn*" and process "*prc*", relative to year 2000.", "units" => "mm"))
         end
     end
     close(fh)

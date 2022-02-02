@@ -18,14 +18,22 @@ include(dir_code*"GriddedProjections.jl")
 include(dir_code*"SaveFigureData.jl")
 
 function main()
+    # Define some projection settings
     settings = DefSettings()
-    # Masks.CreateMask(settings)                       # Not needed to run: mask file is present
-    # ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Not needed to run: converted files are present
-    # GlobalProjections.RunGlobalProjections(settings)
-    # RegionalProjections.RunRegionalProjections(settings)
+
+    # Routines to do some preprocessing. Not needed to run: output has been provided
+    # Currently commented out:
+    #Masks.CreateMask(settings)                       # Create a region mask for each of the regions
+    #ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Covert the NCA5 projections to single GMSL, tide-gauge and gridded projections
+    
+    # Create the projections
+    GlobalProjections.RunGlobalProjections(settings)
+    RegionalProjections.RunRegionalProjections(settings)
     LocalProjections.RunLocalProjections(settings)
-    # GriddedProjections.RunGriddedProjections(settings)
-    # SaveFigureData.RunSaveFigureData(settings)
+    GriddedProjections.RunGriddedProjections(settings)
+
+    # Save the data for the report figures
+    SaveFigureData.RunSaveFigureData(settings)
     return nothing
 end
 
@@ -58,11 +66,11 @@ function DefSettings()
     settings["dir_NCA5_raw"] = homedir() * "/Data/NCA5/"
     settings["dir_NCA5"] =settings["dir_project"]*"Data/NCA5_projections/"
 
-    # Files to save the NOAA projections
-    settings["fn_proj_glb"] = settings["dir_project"]*"Data/TR_global_projections.nc" 
-    settings["fn_proj_reg"] = settings["dir_project"]*"Data/TR_regional_projections.nc" 
-    settings["fn_proj_lcl"] = settings["dir_project"]*"Data/TR_local_projections.nc" 
-    settings["fn_proj_gri"] = settings["dir_project"]*"Data/TR_gridded_projections.nc" 
+    # Files to save the Technical Report projections
+    settings["fn_proj_glb"] = settings["dir_project"]*"Results/TR_global_projections.nc" 
+    settings["fn_proj_reg"] = settings["dir_project"]*"Results/TR_regional_projections.nc" 
+    settings["fn_proj_lcl"] = settings["dir_project"]*"Results/TR_local_projections.nc" 
+    settings["fn_proj_gri"] = settings["dir_project"]*"Results/TR_gridded_projections.nc" 
 
     # Scenarios
     settings["NCA5_scenarios"]  = ["Low","IntLow","Int","IntHigh","High"]

@@ -151,31 +151,33 @@ function save_data(local_obs,NCA5_local, years_NCA5, pct_NCA5,settings)
     rsl_obs[:,acc_obs] = local_obs["rsl"]
    
     fh = Dataset(settings["fn_proj_lcl"],"c")
+    fh.attrib["title"] = "Local projections"
+    fh.attrib["description"] = "Local projections, trajectory, and observations at tide-gauge locations for the interagency report: Global and Regional Sea Level Rise Scenarios for the United States: Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines"
+    fh.attrib["processes"] = "AIS: Antarctic Ice Sheet, GIS: Greenland, glaciers: Glaciers and Ice Caps, landwaterstorage: Liquid water storage changes on land, oceandynamics: Ocean dynamics and global thermosteric expansion, verticallandmotion: Vertical land motion, total: All processes combined."
+
     defDim(fh,"years", length(settings["years"]))
     defDim(fh,"percentiles",3)
     defDim(fh,"tg", length(local_obs["name"]))
 
-    defVar(fh,"tg",local_obs["name"],("tg",),deflatelevel=5)
-    defVar(fh,"lon",local_obs["coords"][:,1],("tg",),deflatelevel=5)
-    defVar(fh,"lat",local_obs["coords"][:,2],("tg",),deflatelevel=5)
-    defVar(fh,"years",settings["years"],("years",),deflatelevel=5)
-    defVar(fh,"percentiles",convert.(Int32,[17,50,83]),("percentiles",),deflatelevel=5)
+    defVar(fh,"tg",local_obs["name"],("tg",),deflatelevel=5, attrib = Dict("description" => "Name of the tide gauge", "units" => "-"))
+    defVar(fh,"lon",local_obs["coords"][:,1],("tg",),deflatelevel=5, attrib = Dict("description" => "Longitude of the tide gauge", "units" => "degrees East"))
+    defVar(fh,"lat",local_obs["coords"][:,2],("tg",),deflatelevel=5, attrib = Dict("description" => "Latitude of the tide gauge", "units" => "degrees North"))
+    defVar(fh,"years",settings["years"],("years",),deflatelevel=5, attrib = Dict("units" => "years"))
+    defVar(fh,"percentiles",convert.(Int32,[17,50,83]),("percentiles",),deflatelevel=5, attrib = Dict("description" => "The percentile of the projection. The 50th percentile shows the median projection, and the 17th and 83rd show the upper- and lower bound on the 1 sigma level.", "units" => "-"))
 
-    defVar(fh,"PSMSL_id",convert.(Int32,local_obs["psmsl_id"]),("tg",),deflatelevel=5,attrib = Dict(
-        "comments" => "PSMSL ID to which the tide gauge corresponds. Stations that are not in PSMSL are flagged -1."))
-    defVar(fh,"QC_flag",convert.(Int8,local_obs["qc_flag"]),("tg",),deflatelevel=5,attrib = Dict(
-        "comments" => "Quality control flag. Value of 1 means possible issue. Currently manual process"))
+    defVar(fh,"PSMSL_id",convert.(Int32,local_obs["psmsl_id"]),("tg",),deflatelevel=5, attrib = Dict("description" => "PSMSL ID to which the tide gauge corresponds. Stations that are not in PSMSL are flagged -1."))
+    defVar(fh,"QC_flag",convert.(Int8,local_obs["qc_flag"]),("tg",),deflatelevel=5, attrib = Dict("description" => "Quality control flag. Value of 1 means possible issue. Currently manual process."))
     # Write trajectory
-    defVar(fh,"rsl_obs",rsl_obs,("tg","years"),deflatelevel=5)
-    defVar(fh,"number_of_observation_years_for_trajectory_estimation",local_obs["obs_length"],("tg",),deflatelevel=5)
-    defVar(fh,"number_of_observation_years_for_trajectory_estimation_geq_30",local_obs["obs_lt_30"],("tg",),deflatelevel=5)
-    defVar(fh,"rsl_trajectory",local_obs["rsl_trajectory"],("tg","years","percentiles"),deflatelevel=5)
-    defVar(fh,"rsl_trend",local_obs["rsl_trend"],("tg","percentiles"),deflatelevel=5)
-    defVar(fh,"rsl_accel",local_obs["rsl_accel"],("tg","percentiles"),deflatelevel=5)
+    defVar(fh,"rsl_obs",rsl_obs,("tg","years"),deflatelevel=5, attrib = Dict("description" => "Observed local sea-level changes, relative to year 2000 (tide-gauge observations).", "units" => "mm"))
+    defVar(fh,"number_of_observation_years_for_trajectory_estimation",local_obs["obs_length"],("tg",),deflatelevel=5, attrib = Dict("description" => "Number of observation-years used to estimate the trajectory.", "units" => "-"))
+    defVar(fh,"number_of_observation_years_for_trajectory_estimation_geq_30",local_obs["obs_lt_30"],("tg",),deflatelevel=5, attrib = Dict("description" => "Flag if number of observation-years used for the trajectory exceeds 30. 1: 30 years or more, 0: less than 30 years.", "units" => "-"))
+    defVar(fh,"rsl_trajectory",local_obs["rsl_trajectory"],("tg","years","percentiles"),deflatelevel=5, attrib = Dict("description" => "Estimated local sea-level trajectory, relative to year 2000.", "units" => "mm"))
+    defVar(fh,"rsl_trend",local_obs["rsl_trend"],("tg","percentiles"),deflatelevel=5, attrib = Dict("description" => "Linear trend of estimated trajectory", "units" => "mm yr-1"))
+    defVar(fh,"rsl_accel",local_obs["rsl_accel"],("tg","percentiles"),deflatelevel=5, attrib = Dict("description" => "Acceleration (half quadratic) of estimated trajectory", "units" => "mm yr-2"))
     # Write scenarios
     for scn ∈ settings["NCA5_scenarios"]
         for prc in settings["processes"]
-            defVar(fh,"rsl_"*prc*"_"*scn,scn_proj[scn][prc],("tg","years","percentiles",),deflatelevel=5)
+            defVar(fh,"rsl_"*prc*"_"*scn,scn_proj[scn][prc],("tg","years","percentiles",),deflatelevel=5, attrib = Dict("description" => "Projected local sea level for scenario "*scn*" and process "*prc*", relative to year 2000.", "units" => "mm"))
         end
     end
     close(fh)

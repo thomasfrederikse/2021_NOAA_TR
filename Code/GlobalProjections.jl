@@ -183,22 +183,25 @@ end
 function save_data(GMSL_20c,GMSL_Trajectory,GMSL_Altimetry,GMSL_NCA5,settings)
     println("  Saving data...")
     fh = Dataset(settings["fn_proj_glb"],"c")
+    fh.attrib["title"] = "Global projections"
+    fh.attrib["description"] = "Global projections, trajectory, and observations for the interagency report: Global and Regional Sea Level Rise Scenarios for the United States: Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines"
     defDim(fh,"years", length(settings["years"]))
     defDim(fh,"percentiles",3)
-    defVar(fh,"years",settings["years"],("years",),deflatelevel=5)
-    defVar(fh,"percentiles",convert.(Int32,[17,50,83]),("percentiles",),deflatelevel=5)
+
+    defVar(fh,"years",settings["years"],("years",),deflatelevel=5,attrib = Dict("units" => "years"))
+    defVar(fh,"percentiles",convert.(Int32,[17,50,83]),("percentiles",),deflatelevel=5, attrib = Dict("description" => "The percentile of the projection. The 50th percentile shows the median projection, and the 17th and 83rd show the upper- and lower bound on the 1 sigma level", "units" => "-"))
 
     # Write observations and trajectory
-    defVar(fh,"GMSL_20c",Float32,("years","percentiles"),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,GMSL_20c["years"]),[1.0f0:3.0f0...]),GMSL_20c["rsl"],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
-    defVar(fh,"GMSL_Altimetry",Float32,("years",),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,GMSL_Altimetry["years"])),GMSL_Altimetry["alt"],extrapolation_bc=NaN32)(settings["years"])
-    defVar(fh,"GMSL_Trajectory",Float32,("years","percentiles"),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,settings["years_trajectory_global"]),[1.0f0:3.0f0...]),GMSL_Trajectory["rsl"],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
+    defVar(fh,"GMSL_20c",Float32,("years","percentiles"),deflatelevel=5,attrib = Dict("description" => "Estimated 20th-century GMSL change (adapted from Frederikse et al. (2020)), relative to year 2000.", "units" => "mm"))[:] = LinearInterpolation((convert.(Float32,GMSL_20c["years"]),[1.0f0:3.0f0...]),GMSL_20c["rsl"],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
+    defVar(fh,"GMSL_Altimetry",Float32,("years",),deflatelevel=5, attrib = Dict("description" => "Observed GMSL change over the altimetry era (NASA GSFC, Beckley et al. (2017)), relative to year 2000.", "units" => "mm"))[:] = LinearInterpolation((convert.(Float32,GMSL_Altimetry["years"])),GMSL_Altimetry["alt"],extrapolation_bc=NaN32)(settings["years"])
+    defVar(fh,"GMSL_Trajectory",Float32,("years","percentiles"),deflatelevel=5, attrib = Dict("description" => "Estimated GMSL trajectory, relative to year 2000.", "units" => "mm"))[:] = LinearInterpolation((convert.(Float32,settings["years_trajectory_global"]),[1.0f0:3.0f0...]),GMSL_Trajectory["rsl"],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
     
-    defVar(fh,"GMSL_trend",GMSL_Trajectory["trend"],("percentiles",),deflatelevel=5)
-    defVar(fh,"GMSL_accel",GMSL_Trajectory["accel"],("percentiles",),deflatelevel=5)
+    defVar(fh,"GMSL_trend", GMSL_Trajectory["trend"], ("percentiles",), deflatelevel=5, attrib = Dict("description" => "Linear trend of estimated trajectory", "units" => "mm yr-1"))
+    defVar(fh,"GMSL_accel",GMSL_Trajectory["accel"],("percentiles",),deflatelevel=5, attrib = Dict("description" => "Acceleration (half quadratic) of estimated trajectory", "units" => "mm yr-2"))
 
     # Write scenarios
     for scenario ∈ settings["NCA5_scenarios"]
-        defVar(fh,"GMSL_"*scenario,Float32,("years","percentiles"),deflatelevel=5)[:] = LinearInterpolation((convert.(Float32,GMSL_NCA5["years"]),[1.0f0:3.0f0...]),GMSL_NCA5[scenario],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
+        defVar(fh,"GMSL_"*scenario,Float32,("years","percentiles"),deflatelevel=5, attrib = Dict("description" => "Projected sea level for scenario "*scenario*", relative to year 2000.", "units" => "mm"))[:] = LinearInterpolation((convert.(Float32,GMSL_NCA5["years"]),[1.0f0:3.0f0...]),GMSL_NCA5[scenario],extrapolation_bc=NaN32)(settings["years"],[1.0f0:3.0f0...])
     end
     close(fh)
     return nothing
