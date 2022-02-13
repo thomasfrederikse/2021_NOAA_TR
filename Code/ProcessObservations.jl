@@ -128,10 +128,10 @@ function MapToRegions(local_obs, settings)
     for stat ∈ 1:size(local_obs["coords"],1)
         strip(local_obs["name"][stat][end-2:end]) == "AK" ? in_alaska[stat] = true : nothing
     end
-    ALN_list = ["Unalaska, AK","Prudhoe Bay, AK","Nome, AK","Adak Island, AK ","Unalaska, AK"]
+    NAL_list = ["Unalaska, AK","Prudhoe Bay, AK","Nome, AK","Adak Island, AK ","Unalaska, AK"]
     # Determine region
     for (region_idx,region) ∈ enumerate(settings["regions"])
-        if (region!="ALN") & (region!="ALS")
+        if (region!="NAL") & (region!="SAL")
             for stat ∈ 1:size(local_obs["coords"],1)
                 ϕ_idx = argmin(@. abs(local_obs["coords"][stat,1] - mask["ϕ"]))
                 θ_idx = argmin(@. abs(local_obs["coords"][stat,2] - mask["θ"]))
@@ -139,11 +139,11 @@ function MapToRegions(local_obs, settings)
                     region_num[region_idx,stat] = true
                 end
             end
-        elseif region=="ALN"
+        elseif region=="NAL"
             for stat ∈ 1:size(local_obs["coords"],1)
-                local_obs["name"][stat] in ALN_list ? region_num[region_idx,stat] = true : nothing
+                local_obs["name"][stat] in NAL_list ? region_num[region_idx,stat] = true : nothing
             end
-        elseif region=="ALS"
+        elseif region=="SAL"
             for stat ∈ 1:size(local_obs["coords"],1)
                 in_alaska[stat] & !region_num[region_idx-1,stat] ? region_num[region_idx,stat] = true : nothing
             end
@@ -165,8 +165,8 @@ function ComputeRegionObs(local_obs,settings)
     ComputeVirstat!(local_obs,region_obs,settings) 
     ReadAltimetry!(region_obs,settings) # Altimetry
 
-    # Contiguous USA curve is average of the six regions that circumference the Contiguous
-    region_obs["USA"]["rsl"] = (region_obs["EC"]["rsl"] + region_obs["SE"]["rsl"] + region_obs["GCE"]["rsl"] + region_obs["GCW"]["rsl"] + region_obs["SWC"]["rsl"] + region_obs["NWC"]["rsl"]) ./6
+    # Contiguous USA curve is average of the six regions that circumference the Contiguous US
+    region_obs["USA"]["rsl"] = (region_obs["NE"]["rsl"] + region_obs["SE"]["rsl"] + region_obs["WGOM"]["rsl"] + region_obs["EGOM"]["rsl"] + region_obs["SW"]["rsl"] + region_obs["NW"]["rsl"]) ./6
     
     # Remove natural variability
     clim_indices = ReadClimIndices(settings)

@@ -23,7 +23,7 @@ function main()
 
     # Routines to do some preprocessing. Not needed to run: output has been provided
     # Currently commented out:
-    #Masks.CreateMask(settings)                       # Create a region mask for each of the regions
+    Masks.CreateMask(settings)                       # Create a region mask for each of the regions
     #ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Covert the NCA5 projections to single GMSL, tide-gauge and gridded projections
     
     # Create the projections
@@ -74,7 +74,8 @@ function DefSettings()
 
     # Scenarios
     settings["NCA5_scenarios"]  = ["Low","IntLow","Int","IntHigh","High"]
-    settings["regions"]         = ["USA","EC","SE","GCE","GCW","SWC","NWC","PAC","CAR","ALN","ALS"]
+    settings["regions"]         = ["USA","EC", "SE", "GCE",  "GCW",  "SWC","NWC","PAC","CAR","ALN","ALS"] # V1.0 names
+    settings["regions"]         = ["USA","NE", "SE", "EGOM", "WGOM", "SW", "NW", "PAC","CAR","NAL","SAL"] # V1.1 names
     settings["processes"]       = ["AIS","GIS","glaciers","landwaterstorage","oceandynamics","total","verticallandmotion"]
     settings["processes_clim"]  = ["AIS","GIS","glaciers","landwaterstorage","oceandynamics"]
 

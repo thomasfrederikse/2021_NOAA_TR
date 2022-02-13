@@ -5,36 +5,38 @@ using NCDatasets
 using Interpolations
 
 function CreateMask(settings)
+    println("  Creating region masks...")
+
     # ----------------------------------------------------------------------------
     # Make a 0.5° mask of US coastal sea level to combine with CDS/CMEMS altimetry
     # 8 basins:
-    # 1. EC East Coast
+    # 1. NE Northeast Coast
     # 2. SE southeast coast
-    # 3. GCE Gulf Coast east
-    # 4. GCW Gulf coast west
-    # 5. SWC Southwest coast
-    # 6. NWC Northwest coast
+    # 3. EGOM Eastern Gulf of Mexico
+    # 4. WGOM Gulf coast west
+    # 5. SW Southwest coast
+    # 6. NW Northwest coast
     # 7. PAC Pacific Islands (Hawaii)
     # 8. CAR Carribean Islands
-    # 9. ALN Alaska North
-    # 10. ALS Alaska South
+    # 9. NAL North Alaska 
+    # 10. SAL South Alaska
     # ----------------------------------------------------------------------------
     fn_slm   = homedir()*"/Data/GRACE/JPL_mascon/mask.nc"
 
     # boundaries
-    EC = [282.5 292;35.2  43.0]
+    NE = [282.5 292;35.2  43.0]
     SE = [278.5 286; 25.0  35.2]
-    GCE = [ 270.5  278.5; 25.0  31.0]
-    GCW = [261.0  270.5; 25.0  31.0]
-    SWC = [234.0  242.0; 31.0  42.0]
-    NWC = [234.0  242.0; 42.0  48.0] 
+    EGOM = [ 270.5  278.5; 25.0  31.0]
+    WGOM = [261.0  270.5; 25.0  31.0]
+    SW = [234.0  242.0; 31.0  42.0]
+    NW = [234.0  242.0; 42.0  48.0] 
     PAC = [180.0  210.0; 18.0  30.0] 
     CAR = [280.0  300.0; 14.0  25.0] 
-    ALN = [187.0  219.0; 51.0  72.0] 
-    ALS1 = [172.0  213.0; 47.0  60.0] 
-    ALS2 = [200.0  231.0; 54.75  62.5] 
+    NAL = [187.0  219.0; 51.0  72.0] 
+    SAL1 = [172.0  213.0; 47.0  60.0] 
+    SAL2 = [200.0  231.0; 54.75  62.5] 
 
-    # EC- Lat: [35.2 43]; Lon: [282.5 292]
+    # NE- Lat: [35.2 43]; Lon: [282.5 292]
     # SE- Lat: [25 35.2]; Lon: [278.5 286]
     # GC- Lat: [25 31]; Lon: [261 278.5]
     # WC- Lat: [31 47.5]; Lon: [234, 242]
@@ -45,81 +47,85 @@ function CreateMask(settings)
     depth = ncread(settings["fn_bathymetry"],"z")
     basin = ncread(settings["fn_basin_codes"],"basin")
 
-    EC_mask = @. (ϕ>=EC[1,1]) & (ϕ<=EC[1,2]) & (θ>=EC[2,1]) & (θ<=EC[2,2]) & slm & (depth > -500)
+    NE_mask = @. (ϕ>=NE[1,1]) & (ϕ<=NE[1,2]) & (θ>=NE[2,1]) & (θ<=NE[2,2]) & slm & (depth > -500)
     SE_mask = @. (ϕ>=SE[1,1]) & (ϕ<=SE[1,2]) & (θ>=SE[2,1]) & (θ<=SE[2,2]) & slm & (depth > -700)
-    GCE_mask = @. (ϕ>=GCE[1,1]) & (ϕ<=GCE[1,2]) & (θ>=GCE[2,1]) & (θ<=GCE[2,2]) & slm & (depth > -2000)
-    GCW_mask = @. (ϕ>=GCW[1,1]) & (ϕ<=GCW[1,2]) & (θ>=GCW[2,1]) & (θ<=GCW[2,2]) & slm & (depth > -2000)
-    SWC_mask = @. (ϕ>=SWC[1,1]) & (ϕ<=SWC[1,2]) & (θ>=SWC[2,1]) & (θ<=SWC[2,2]) & slm & (depth > -2500)
-    NWC_mask = @. (ϕ>=NWC[1,1]) & (ϕ<=NWC[1,2]) & (θ>=NWC[2,1]) & (θ<=NWC[2,2]) & slm & (depth > -2500)
+    EGOM_mask = @. (ϕ>=EGOM[1,1]) & (ϕ<=EGOM[1,2]) & (θ>=EGOM[2,1]) & (θ<=EGOM[2,2]) & slm & (depth > -2000)
+    WGOM_mask = @. (ϕ>=WGOM[1,1]) & (ϕ<=WGOM[1,2]) & (θ>=WGOM[2,1]) & (θ<=WGOM[2,2]) & slm & (depth > -2000)
+    SW_mask = @. (ϕ>=SW[1,1]) & (ϕ<=SW[1,2]) & (θ>=SW[2,1]) & (θ<=SW[2,2]) & slm & (depth > -2500)
+    NW_mask = @. (ϕ>=NW[1,1]) & (ϕ<=NW[1,2]) & (θ>=NW[2,1]) & (θ<=NW[2,2]) & slm & (depth > -2500)
     CAR_mask = @. (ϕ>=CAR[1,1]) & (ϕ<=CAR[1,2]) & (θ>=CAR[2,1]) & (θ<=CAR[2,2]) & slm & (depth > -2500)
     PAC_mask = @. (ϕ>=PAC[1,1]) & (ϕ<=PAC[1,2]) & (θ>=PAC[2,1]) & (θ<=PAC[2,2]) & slm & (depth > -5000)
-    ALN_mask = @. (ϕ>=ALN[1,1]) & (ϕ<=ALN[1,2]) & (θ>=ALN[2,1]) & (θ<=ALN[2,2]) & slm & (depth > -500) & (basin !=1) & (basin !=0)
+    NAL_mask = @. (ϕ>=NAL[1,1]) & (ϕ<=NAL[1,2]) & (θ>=NAL[2,1]) & (θ<=NAL[2,2]) & slm & (depth > -500) & (basin !=1) & (basin !=0)
 
-    ALS1_mask = @. (ϕ>=ALS1[1,1]) & (ϕ<=ALS1[1,2]) & (θ>=ALS1[2,1]) & (θ<=ALS1[2,2]) & slm & (depth > -500) & (basin ==1) 
-    ALS2_mask = @. (ϕ>=ALS2[1,1]) & (ϕ<=ALS2[1,2]) & (θ>=ALS2[2,1]) & (θ<=ALS2[2,2]) & slm & (depth > -500) & (basin ==1) 
-    ALS_mask = @. ALS1_mask | ALS2_mask
-    USA_mask = @. EC_mask | SE_mask | GCE_mask | GCW_mask | SWC_mask | NWC_mask
+    SAL1_mask = @. (ϕ>=SAL1[1,1]) & (ϕ<=SAL1[1,2]) & (θ>=SAL1[2,1]) & (θ<=SAL1[2,2]) & slm & (depth > -500) & (basin ==1) 
+    SAL2_mask = @. (ϕ>=SAL2[1,1]) & (ϕ<=SAL2[1,2]) & (θ>=SAL2[2,1]) & (θ<=SAL2[2,2]) & slm & (depth > -500) & (basin ==1) 
+    SAL_mask = @. SAL1_mask | SAL2_mask
+    USA_mask = @. NE_mask | SE_mask | EGOM_mask | WGOM_mask | SW_mask | NW_mask
 
     # Mask without land removed (for tide-gauge selection)
-    EC_unc = @. (ϕ>=EC[1,1]) & (ϕ<=EC[1,2]) & (θ>=EC[2,1]) & (θ<=EC[2,2])
+    NE_unc = @. (ϕ>=NE[1,1]) & (ϕ<=NE[1,2]) & (θ>=NE[2,1]) & (θ<=NE[2,2])
     SE_unc = @. (ϕ>=SE[1,1]) & (ϕ<=SE[1,2]) & (θ>=SE[2,1]) & (θ<=SE[2,2]) 
-    GCE_unc = @. (ϕ>=GCE[1,1]) & (ϕ<=GCE[1,2]) & (θ>=GCE[2,1]) & (θ<=GCE[2,2]) 
-    GCW_unc = @. (ϕ>=GCW[1,1]) & (ϕ<=GCW[1,2]) & (θ>=GCW[2,1]) & (θ<=GCW[2,2]) 
-    SWC_unc = @. (ϕ>=SWC[1,1]) & (ϕ<=SWC[1,2]) & (θ>=SWC[2,1]) & (θ<=SWC[2,2]) 
-    NWC_unc = @. (ϕ>=NWC[1,1]) & (ϕ<=NWC[1,2]) & (θ>=NWC[2,1]) & (θ<=NWC[2,2]) 
+    EGOM_unc = @. (ϕ>=EGOM[1,1]) & (ϕ<=EGOM[1,2]) & (θ>=EGOM[2,1]) & (θ<=EGOM[2,2]) 
+    WGOM_unc = @. (ϕ>=WGOM[1,1]) & (ϕ<=WGOM[1,2]) & (θ>=WGOM[2,1]) & (θ<=WGOM[2,2]) 
+    SW_unc = @. (ϕ>=SW[1,1]) & (ϕ<=SW[1,2]) & (θ>=SW[2,1]) & (θ<=SW[2,2]) 
+    NW_unc = @. (ϕ>=NW[1,1]) & (ϕ<=NW[1,2]) & (θ>=NW[2,1]) & (θ<=NW[2,2]) 
     CAR_unc = @. (ϕ>=CAR[1,1]) & (ϕ<=CAR[1,2]) & (θ>=CAR[2,1]) & (θ<=CAR[2,2]) 
     PAC_unc = @. (ϕ>=PAC[1,1]) & (ϕ<=PAC[1,2]) & (θ>=PAC[2,1]) & (θ<=PAC[2,2])
-    ALN_unc = @. (ϕ>=ALN[1,1]) & (ϕ<=ALN[1,2]) & (θ>=ALN[2,1]) & (θ<=ALN[2,2])
-    ALS1_unc = @. (ϕ>=ALS1[1,1]) & (ϕ<=ALS1[1,2]) & (θ>=ALS1[2,1]) & (θ<=ALS1[2,2])
-    ALS2_unc = @. (ϕ>=ALS2[1,1]) & (ϕ<=ALS2[1,2]) & (θ>=ALS2[2,1]) & (θ<=ALS2[2,2])
-    ALS_unc = @. ALS1_unc | ALS2_unc
+    NAL_unc = @. (ϕ>=NAL[1,1]) & (ϕ<=NAL[1,2]) & (θ>=NAL[2,1]) & (θ<=NAL[2,2])
+    SAL1_unc = @. (ϕ>=SAL1[1,1]) & (ϕ<=SAL1[1,2]) & (θ>=SAL1[2,1]) & (θ<=SAL1[2,2])
+    SAL2_unc = @. (ϕ>=SAL2[1,1]) & (ϕ<=SAL2[1,2]) & (θ>=SAL2[2,1]) & (θ<=SAL2[2,2])
+    SAL_unc = @. SAL1_unc | SAL2_unc
 
-    USA_unc = @. EC_unc | SE_unc | GCE_unc | GCW_unc | SWC_unc | NWC_unc
+    USA_unc = @. NE_unc | SE_unc | EGOM_unc | WGOM_unc | SW_unc | NW_unc
 
     # Make numerical mask for plot
-    mask_num = zeros(Int16,size(EC_mask))
-    mask_num[EC_mask] .= 1
+    mask_num = zeros(Int16,size(NE_mask))
+    mask_num[NE_mask] .= 1
     mask_num[SE_mask] .= 2
-    mask_num[GCE_mask] .= 3
-    mask_num[GCW_mask] .= 4
-    mask_num[SWC_mask] .= 5
-    mask_num[NWC_mask] .= 6
+    mask_num[EGOM_mask] .= 3
+    mask_num[WGOM_mask] .= 4
+    mask_num[SW_mask] .= 5
+    mask_num[NW_mask] .= 6
     mask_num[PAC_mask] .= 7
     mask_num[CAR_mask] .= 8
-    mask_num[ALN_mask] .= 9
-    mask_num[ALS_mask] .= 10
+    mask_num[NAL_mask] .= 9
+    mask_num[SAL_mask] .= 10
 
     # Save
+    println("   Saving...")
+
     fh = Dataset(settings["fn_region_mask"],"c")
     defDim(fh,"lon", length(ϕ[:]))
     defDim(fh,"lat", length(θ[:]))
     defVar(fh,"lon",ϕ[:],("lon",),deflatelevel=5)
     defVar(fh,"lat",θ[:],("lat",),deflatelevel=5)
-    defVar(fh,"EC_mask",convert.(UInt8,EC_mask),("lon","lat",),deflatelevel=5)
+    defVar(fh,"NE_mask",convert.(UInt8,NE_mask),("lon","lat",),deflatelevel=5)
     defVar(fh,"SE_mask",convert.(UInt8,SE_mask),("lon","lat",),deflatelevel=5)
-    defVar(fh,"GCE_mask",convert.(UInt8,GCE_mask),("lon","lat",),deflatelevel=5)
-    defVar(fh,"GCW_mask",convert.(UInt8,GCW_mask),("lon","lat",),deflatelevel=5)
-    defVar(fh,"SWC_mask",convert.(UInt8,SWC_mask),("lon","lat",),deflatelevel=5)
-    defVar(fh,"NWC_mask",convert.(UInt8,NWC_mask),("lon","lat",),deflatelevel=5)
+    defVar(fh,"EGOM_mask",convert.(UInt8,EGOM_mask),("lon","lat",),deflatelevel=5)
+    defVar(fh,"WGOM_mask",convert.(UInt8,WGOM_mask),("lon","lat",),deflatelevel=5)
+    defVar(fh,"SW_mask",convert.(UInt8,SW_mask),("lon","lat",),deflatelevel=5)
+    defVar(fh,"NW_mask",convert.(UInt8,NW_mask),("lon","lat",),deflatelevel=5)
     defVar(fh,"PAC_mask",convert.(UInt8,PAC_mask),("lon","lat",),deflatelevel=5)
     defVar(fh,"CAR_mask",convert.(UInt8,CAR_mask),("lon","lat",),deflatelevel=5)
-    defVar(fh,"ALN_mask",convert.(UInt8,ALN_mask),("lon","lat",),deflatelevel=5)
-    defVar(fh,"ALS_mask",convert.(UInt8,ALS_mask),("lon","lat",),deflatelevel=5)
+    defVar(fh,"NAL_mask",convert.(UInt8,NAL_mask),("lon","lat",),deflatelevel=5)
+    defVar(fh,"SAL_mask",convert.(UInt8,SAL_mask),("lon","lat",),deflatelevel=5)
     defVar(fh,"USA_mask",convert.(UInt8,USA_mask),("lon","lat",),deflatelevel=5)
     defVar(fh,"mask_num",mask_num,("lon","lat",),deflatelevel=5)
 
-    defVar(fh,"EC_unc",convert.(UInt8,EC_unc),("lon","lat",),deflatelevel=5)
+    defVar(fh,"NE_unc",convert.(UInt8,NE_unc),("lon","lat",),deflatelevel=5)
     defVar(fh,"SE_unc",convert.(UInt8,SE_unc),("lon","lat",),deflatelevel=5)
-    defVar(fh,"GCE_unc",convert.(UInt8,GCE_unc),("lon","lat",),deflatelevel=5)
-    defVar(fh,"GCW_unc",convert.(UInt8,GCW_unc),("lon","lat",),deflatelevel=5)
-    defVar(fh,"SWC_unc",convert.(UInt8,SWC_unc),("lon","lat",),deflatelevel=5)
-    defVar(fh,"NWC_unc",convert.(UInt8,NWC_unc),("lon","lat",),deflatelevel=5)
+    defVar(fh,"EGOM_unc",convert.(UInt8,EGOM_unc),("lon","lat",),deflatelevel=5)
+    defVar(fh,"WGOM_unc",convert.(UInt8,WGOM_unc),("lon","lat",),deflatelevel=5)
+    defVar(fh,"SW_unc",convert.(UInt8,SW_unc),("lon","lat",),deflatelevel=5)
+    defVar(fh,"NW_unc",convert.(UInt8,NW_unc),("lon","lat",),deflatelevel=5)
     defVar(fh,"CAR_unc",convert.(UInt8,CAR_unc),("lon","lat",),deflatelevel=5)
     defVar(fh,"PAC_unc",convert.(UInt8,PAC_unc),("lon","lat",),deflatelevel=5)
-    defVar(fh,"ALN_unc",convert.(UInt8,ALN_unc),("lon","lat",),deflatelevel=5)
-    defVar(fh,"ALS_unc",convert.(UInt8,ALS_unc),("lon","lat",),deflatelevel=5)
+    defVar(fh,"NAL_unc",convert.(UInt8,NAL_unc),("lon","lat",),deflatelevel=5)
+    defVar(fh,"SAL_unc",convert.(UInt8,SAL_unc),("lon","lat",),deflatelevel=5)
     defVar(fh,"USA_unc",convert.(UInt8,USA_unc),("lon","lat",),deflatelevel=5)
     close(fh)
+    println("  Creating region done")
+
     return nothing
 end
 

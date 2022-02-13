@@ -34,6 +34,7 @@ Frequently-asked questions: <https://sealevel.sit.earthdata.nasa.gov/faq/16/>
 
 ## Contents
 This data and code set contains the following directories:
+
 ### Results
 The `Results` folder contains the resulting projections, trajectories and observations from the report.
 

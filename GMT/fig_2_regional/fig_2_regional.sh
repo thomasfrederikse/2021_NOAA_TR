@@ -56,7 +56,7 @@ gmt psxy  -R -J -N -W1.5p,$color0 -O -K ${region}_20c.txt   >> $ps
 gmt psxy  -R -J -N -W1.5p,$color1 -O -K ${region}_Altimetry.txt   >> $ps
 }
 
-region="EC"
+region="NE"
 gmt psbasemap -K -R$R -J$J -Y15.6c -X1.0c -BWesn+t'Northeast' -B$Bx -B$By+l'Sea level (m)'  > $ps
 print_lines
 echo "1970 0.8 a)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
@@ -66,22 +66,22 @@ gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Southeast' -B$Bx -B$By  >> $ps
 print_lines
 echo "1970 0.8 b)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
-region="GCE"
+region="EGOM"
 gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWesn+t'Eastern Gulf' -B$Bx -B$By+l'Sea level (m)'  >> $ps
 print_lines
 echo "1970 0.8 c)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
-region="GCW"
+region="WGOM"
 gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Western Gulf' -B$Bx -B$By  >> $ps
 print_lines
 echo "1970 0.8 d)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
-region="SWC"
+region="SW"
 gmt psbasemap -O -K -R$R -J$J -X-7.8c -Y-4.5c -BWesn+t'Southwest' -B$Bx -B$By+l'Sea level (m)'  >> $ps
 print_lines
 echo "1970 0.8 e)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps
 
-region="NWC"
+region="NW"
 gmt psbasemap -O -K -R$R -J$J -X7.8c -Bwesn+t'Northwest' -B$Bx -B$By  >> $ps
 print_lines
 echo "1970 0.8 f)" | gmt pstext -D0.125c/-0.125c -Gwhite -R -J -F+f9p,Hind-SemiBold+jLT -O -K >> $ps

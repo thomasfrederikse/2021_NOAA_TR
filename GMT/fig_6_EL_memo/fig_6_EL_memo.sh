@@ -55,11 +55,11 @@ region="USA"
 gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Contiguous United States' -B$Bx -B$By  >> $ps
 print_lines
 
-region="EC"
+region="NE"
 gmt psbasemap -O -K -R$R -J$J -Y-5.8c -X-7.8c -BWeSn+t'Northeast Coast' -B$Bx -B$By+l'Sea level (m)'  >> $ps
 print_lines
 
-region="SWC"
+region="SW"
 gmt psbasemap -O -K -R$R -J$J -X7.8c -BweSn+t'Southwest Coast' -B$Bx -B$By  >> $ps
 print_lines
 

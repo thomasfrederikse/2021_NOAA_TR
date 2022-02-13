@@ -134,7 +134,7 @@ function SaveRegionData(region_obs,NCA5_regional,settings)
     fh.attrib["title"] = "Regional projections"
     fh.attrib["description"] = "Regional projections, trajectory, and observations for the interagency report: Global and Regional Sea Level Rise Scenarios for the United States: Updated Mean Projections and Extreme Water Level Probabilities Along U.S. Coastlines"
     fh.attrib["processes"] = "AIS: Antarctic Ice Sheet, GIS: Greenland, glaciers: Glaciers and Ice Caps, landwaterstorage: Liquid water storage changes on land, oceandynamics: Ocean dynamics and global thermosteric expansion, verticallandmotion: Vertical land motion, total: All processes combined."
-    fh.attrib["regions"] = "USA: Contiguous United States, EC: Northeast Atlantic Coast, SE: Southeast, GCE: Eastern Gulf Coast, GCW: Western Gulf Coast, SWC: Southwest Pacific Coast, NWC: Northwest Pacific Coast, PAC: Hawaiian Islands, CAR: Caribbean Islands, ALN: Alaska North, ALS: Alaska South."
+    fh.attrib["regions"] = "USA: Contiguous United States, NE: Northeast Atlantic Coast, SE: Southeast Atlantic Coast, EGOM: Eastern Gulf of Mexico, WGOM: Western Gulf of Mexico, SW: Southwest Pacific Coast, NW: Northwest Pacific Coast, PAC: Hawaiian Islands, CAR: Caribbean Islands, NAL: North Alaska, SAL: South Alaska."
     defDim(fh,"years", length(settings["years"]))
     defDim(fh,"percentiles",3)
     defDim(fh,"region", length(settings["regions"]))
