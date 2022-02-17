@@ -7,7 +7,9 @@
 # - Put everything on a year 2000 baseline
 # Save all to NOAA_TR_local_projections.nc
 # -------------------------------------------
+
 module LocalProjections
+
 using NetCDF
 using DelimitedFiles
 using Plots
@@ -71,23 +73,41 @@ end
 
 function ReadLocalProjections(local_obs,settings)
     # Locations and time
-    fn = settings["dir_NCA5"]*"NCA5_Low_grid.nc"
-    lon_NCA5 = ncread(fn,"lon")
-    lat_NCA5 = ncread(fn,"lat")
-    years_NCA5 = convert.(Float32,ncread(fn,"years",start=[1],count=[-1]))
-    pct_NCA5 = convert.(Float32,ncread(fn,"percentiles"))
+    fn_grid = settings["dir_NCA5"]*"NCA5_Low_grid.nc"
+    lon_NCA5 = ncread(fn_grid,"lon")
+    lat_NCA5 = ncread(fn_grid,"lat")
+    years_NCA5 = convert.(Float32,ncread(fn_grid,"years",start=[1],count=[-1]))
+    pct_NCA5 = convert.(Float32,ncread(fn_grid,"percentiles"))
 
-    # Find nearest grid cell
-    NCA5_loc = zeros(Int,length(local_obs["name"]),2)
+    fh_tg = Dataset(settings["dir_NCA5"]*"NCA5_Low_tg.nc","r")
+    psmsl_loc = fh_tg["loc"][:]
+    close(fh_tg)
+
+    NCA5_loc_is_present = zeros(Bool,length(local_obs["name"]))
+    NCA5_loc_tg = zeros(Int32,length(local_obs["name"]))
+    NCA5_loc_grid = zeros(Int,length(local_obs["name"]),2)
     for tg in 1:length(local_obs["name"])
-        NCA5_loc[tg,1] = argmin(@. abs(local_obs["coords"][tg,1]-lon_NCA5))
-        NCA5_loc[tg,2] = argmin(@. abs(local_obs["coords"][tg,2]-lat_NCA5))
+        loc_idx = findfirst(==(local_obs["psmsl_id"][tg]),psmsl_loc)
+        if ~isnothing(loc_idx)
+            # Tide gauge is in PSMSL/local database: use tide-gauge projection
+            NCA5_loc_is_present[tg] = true
+            NCA5_loc_tg[tg] = loc_idx
+            NCA5_loc_grid[tg,1] = argmin(@. abs(local_obs["coords"][tg,1]-lon_NCA5))
+            NCA5_loc_grid[tg,2] = argmin(@. abs(local_obs["coords"][tg,2]-lat_NCA5))
+        else
+            # Tide gauge is not in PSMSL/local database: sample location from the grid
+            NCA5_loc_is_present[tg] = false
+            NCA5_loc_tg[tg] = -1
+            NCA5_loc_grid[tg,1] = argmin(@. abs(local_obs["coords"][tg,1]-lon_NCA5))
+            NCA5_loc_grid[tg,2] = argmin(@. abs(local_obs["coords"][tg,2]-lat_NCA5))
+        end
     end
 
     # Create data sctructure
     NCA5_local = Array{Dict}(undef,length(local_obs["name"]))
     for tg in 1:length(local_obs["name"])
         NCA5_local[tg] = Dict()
+        NCA5_local[tg]["Loc_is_in_proj"] = NCA5_loc_is_present[tg]
         for scn in settings["NCA5_scenarios"]
             NCA5_local[tg][scn] = Dict()
         end
@@ -96,11 +116,17 @@ function ReadLocalProjections(local_obs,settings)
     # Read data
     for scenario in settings["NCA5_scenarios"]
         println("   Scenario "*scenario*"...")
-        fn = settings["dir_NCA5"]*"NCA5_"*scenario*"_grid.nc"
+        fn_grid = settings["dir_NCA5"]*"NCA5_"*scenario*"_grid.nc"
+        fn_tg = settings["dir_NCA5"]*"NCA5_"*scenario*"_tg.nc"
         for prc in settings["processes"]
-            NCA5_prc = convert.(Float32,ncread(fn,prc,start=[1,1,1,1],count=[-1,-1,-1,-1]));
+            NCA5_prc_grid = convert.(Float32,ncread(fn_grid,prc));
+            NCA5_prc_tg = convert.(Float32,ncread(fn_tg,prc));
             for tg in 1:length(local_obs["name"])
-                NCA5_local[tg][scenario][prc] = NCA5_prc[NCA5_loc[tg,1],NCA5_loc[tg,2],:,:]
+                if NCA5_loc_is_present[tg] # Use TG scenario
+                    NCA5_local[tg][scenario][prc] = NCA5_prc_tg[NCA5_loc_tg[tg],:,:]
+                else # Use gridded scenario
+                    NCA5_local[tg][scenario][prc] = NCA5_prc_grid[NCA5_loc_grid[tg,1],NCA5_loc_grid[tg,2],:,:]
+                end
             end
         end
     end

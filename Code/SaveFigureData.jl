@@ -8,6 +8,7 @@ module SaveFigureData
 using NetCDF
 using DelimitedFiles
 using Statistics
+using NCDatasets
 function RunSaveFigureData(settings)
     println("Saving figure data...")
     fig_1_gmsl_usa(settings)
@@ -159,6 +160,26 @@ function fig_5_divergence(settings)
         end
     end
     return nothing
+end
+
+function figure_8_US_map(settings)
+    fh = Dataset(settings["fn_proj_gri"],"r")
+    year_idx = findfirst(fh["years"][:].==2100)
+    rsl = convert.(Float32,fh["rsl_total_Int"][:,:,year_idx,2])
+    @. rsl[rsl <-31900] = NaN32
+    @. rsl *= 0.00328084 ## millimeter to feet
+    lon = fh["lon"][:]
+    lat = fh["lat"][:]
+    close(fh)
+
+    fh = Dataset(settings["dir_gmt"] * "fig_8_US_map/fig_8_US_map.nc","c")
+    defDim(fh,"lon", length(lon))
+    defDim(fh,"lat", length(lat))
+    defVar(fh,"lon",lon,("lon",),deflatelevel=5)
+    defVar(fh,"lat",lat,("lat",),deflatelevel=5)
+    defVar(fh,"rsl",rsl,("lon","lat",),deflatelevel=5)
+    close(fh)
+
 end
 
 # -----------------
