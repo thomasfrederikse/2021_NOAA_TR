@@ -23,8 +23,8 @@ function main()
 
     # Routines to do some preprocessing. Not needed to run: output has been provided
     # Currently commented out:
-    Masks.CreateMask(settings)                       # Create a region mask for each of the regions
-    #ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Covert the NCA5 projections to single GMSL, tide-gauge and gridded projections
+    # Masks.CreateMask(settings)                       # Create a region mask for each of the regions
+    ConvertNCA5ToGrid.RunConvertNCA5ToGrid(settings) # Covert the NCA5 projections to single GMSL, tide-gauge and gridded projections
     
     # Create the projections
     GlobalProjections.RunGlobalProjections(settings)
@@ -63,7 +63,7 @@ function DefSettings()
     settings["fn_MEI_2"] = settings["dir_project"]*"Data/ClimIdx/meiv2.data" 
     
     # NCA5 projections
-    settings["dir_NCA5_raw"] = homedir() * "/Data/NCA5/"
+    settings["dir_NCA5_raw"] = homedir() * "/Data/NCA5/proj_2021_09_14/"
     settings["dir_NCA5"] =settings["dir_project"]*"Data/NCA5_projections/"
 
     # Files to save the Technical Report projections
